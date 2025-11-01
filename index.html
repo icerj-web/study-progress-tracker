@@ -1,147 +1,687 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Study Progress Tracker</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f0f8ff;
-      color: #333;
-    }
-    h1 {
-      color: #004aad;
-      text-align: center;
-    }
-    form {
-      background: #e3f2fd;
-      padding: 15px;
-      border-radius: 8px;
-      max-width: 600px;
-      margin: auto;
-      box-shadow: 0 0 8px rgba(0, 74, 173, 0.2);
-    }
-    input, button, textarea {
-      padding: 10px;
-      margin: 5px 0;
-      font-size: 16px;
-      border-radius: 4px;
-      border: 1px solid #004aad;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    button {
-      background: #004aad;
-      color: white;
-      cursor: pointer;
-      border: none;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background: #002f6c;
-    }
-    #topicList {
-      max-width: 700px;
-      margin: 30px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 12px rgba(0, 74, 173, 0.15);
-    }
-    .entry {
-      border-bottom: 1px solid #ddd;
-      padding: 10px 0;
-    }
-    .entry:last-child {
-      border-bottom: none;
-    }
-    .label {
-      font-weight: bold;
-      color: #004aad;
-    }
-    .small-text {
-      color: #777;
-      font-size: 0.9em;
-      margin-top: 4px;
-      margin-bottom: 10px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Study Progress Dashboard</title>
+<style>
+  /* Reset and basics */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: #f5f7fa;
+    color: #333;
+  }
+  h1, h2, h3 {
+    margin-bottom: 0.25em;
+  }
+  a {
+    color: #0066cc;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* Layout Container */
+  .container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 1rem;
+  }
+
+  /* Role selection */
+  #role-selection {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 2rem;
+  }
+  .role-card {
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 220px;
+  }
+  .role-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.15);
+  }
+  .role-emoji {
+    font-size: 3rem;
+    margin-bottom: 10px;
+  }
+
+  /* Dashboard Header */
+  #dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #dashboard-header button {
+    background:#004aad;
+    border:none;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #dashboard-header button:hover {
+    background:#00337f;
+  }
+
+  /* Roadmap & topics list */
+  #roadmap {
+    margin-top: 1rem;
+  }
+  .topic-card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 10px rgb(0 0 0 / 0.05);
+    transition: box-shadow 0.2s ease;
+  }
+  .topic-card:hover {
+    box-shadow: 0 10px 15px rgb(0 0 0 / 0.1);
+  }
+  .topic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .topic-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  .status-select {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 4px 8px;
+    font-weight: 600;
+  }
+
+  /* Labels in cards */
+  .label {
+    font-weight: 700;
+    color: #004aad;
+  }
+
+  /* Progress bar container */
+  #progress-container {
+    margin-top: 30px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
+    padding: 20px;
+    max-width: 700px;
+  }
+  #progress-bar {
+    width: 100%;
+    height: 25px;
+    background: #ddd;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  #progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #004aad 0%, #00aaff 100%);
+    width: 0;
+    transition: width 0.6s ease;
+  }
+  #progress-text {
+    margin-top: 6px;
+    font-weight: 600;
+  }
+
+  /* Detailed Topic info */
+  .topic-details {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    color: #444;
+  }
+  .topic-details a {
+    word-break: break-all;
+  }
+  .study-info {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #555;
+  }
+  .emoji-label {
+    margin-right: 6px;
+    font-size: 1.1rem;
+  }
+
+  /* Form styling */
+  #add-cert-form, #add-skill-form {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+    margin-top: 20px;
+    max-width: 600px;
+  }
+  #add-cert-form h3, #add-skill-form h3 {
+    margin-top: 0;
+  }
+  #add-cert-form input, #add-skill-form input {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+  #add-cert-form button, #add-skill-form button {
+    background: #004aad;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  #add-cert-form button:hover, #add-skill-form button:hover {
+    background: #00337f;
+  }
+
+  /* Certifications and Skills Sections */
+  #certifications, #skills-achieved {
+    margin-top: 3rem;
+  }
+  .item-list {
+    margin-top: 15px;
+  }
+  .item {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .item-details {
+    max-width: 85%;
+  }
+  .item-actions button {
+    background: #e53935;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .item-actions button:hover {
+    background: #ab000d;
+  }
+
+  /* Scroll container */
+  #app {
+    padding-bottom: 100px;
+  }
+</style>
 </head>
 <body>
-  <h1>Study Progress Tracker</h1>
-  <form id="studyForm">
-    <input type="text" id="topic" placeholder="Topic name" required>
+<div class="container" id="app">
+
+  <!-- Role Selection Screen -->
+  <section id="role-selection-screen">
+    <h1>Choose Your Role to Start Your Roadmap <span style="font-size:1.5rem;">🎯</span></h1>
+    <div id="role-selection">
+      <div class="role-card" data-role="DevOps Engineer">
+        <div class="role-emoji">🚀</div>
+        <div><strong>DevOps Engineer</strong></div>
+      </div>
+      <div class="role-card" data-role="Infrastructure Engineer">
+        <div class="role-emoji">💻</div>
+        <div><strong>Infrastructure Engineer</strong></div>
+      </div>
+      <div class="role-card" data-role="NOC Monitoring / Lead">
+        <div class="role-emoji">🖥️</div>
+        <div><strong>NOC Monitoring / Lead</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard Screen -->
+  <section id="dashboard" style="display:none;">
+    <div id="dashboard-header">
+      <h2 id="role-title"></h2>
+      <button id="back-to-roles">← Change Role</button>
+    </div>
+
+    <div id="progress-container">
+      <h3>Overall Progress <span id="progress-emoji">📊</span></h3>
+      <div id="progress-bar">
+        <div id="progress-fill"></div>
+      </div>
+      <div id="progress-text"></div>
+    </div>
+
+    <div id="roadmap"></div>
+
+    <!-- Certifications section -->
+    <section id="certifications" >
+      <h3>Certifications Dashboard <span style="font-size:1.3rem;">🎓</span></h3>
+      <form id="add-cert-form">
+        <h4>Add New Certification</h4>
+        <input type="text" id="cert-name" placeholder="Certification Name (e.g. Azure Administrator)" required />
+        <input type="date" id="cert-date" placeholder="Completion Date" required />
+        <button type="submit">Add Certification</button>
+      </form>
+      <div class="item-list" id="cert-list"></div>
+    </section>
+
+    <!-- Skills achieved section -->
+    <section id="skills-achieved">
+      <h3>Skills & Achievements Dashboard <span style="font-size:1.3rem;">🏆</span></h3>
+      <form id="add-skill-form">
+        <h4>Add New Skill / Achievement</h4>
+        <input type="text" id="skill-name" placeholder="Skill or Achievement Name" required />
+        <button type="submit">Add Skill</button>
+      </form>
+      <div class="item-list" id="skill-list"></div>
+    </section>
+  </section>
+
+</div>
+
+<script>
+  // Roadmap Data by Role with initial topics
+  const roadmapsTemplate = {
+    "DevOps Engineer": [
+      { topic: "Linux & Shell Scripting", description: "Master Linux basics, shell scripting for automation", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Git & GitHub", description: "Version control and collaboration platforms", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Containerization with Docker", description: "Building and running container images", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Kubernetes (AKS)", description: "Container orchestration and management", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "CI/CD with Jenkins & Azure DevOps", description: "Pipeline creation and deployments", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Infrastructure as Code: Terraform, ARM Templates", description: "IaC and automation", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Monitoring Tools: Grafana, Prometheus, SonarQube", description: "Monitor, analyze and improve performance", status: "Pending", link: "", start: "", end: "", notes: "" }
+    ],
     
-    <label for="startDateTime" class="label">Study Start Date & Time</label>
-    <input type="datetime-local" id="startDateTime" required>
-    
-    <label for="endDateTime" class="label">Study End Date & Time</label>
-    <input type="datetime-local" id="endDateTime" required>
+    "Infrastructure Engineer": [
+      { topic: "Microsoft Azure Core", description: "VMs, Resource Groups, Storage, Networking", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "AWS Core Services", description: "EC2, IAM, VPC, CloudWatch, S3, RDS", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "VMware vSphere 7/8", description: "Virtualization platform management", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Networking: DNS, DHCP, VPN, Load Balancers", description: "Fundamental networking protocols and tools", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Databases: MySQL, Oracle SQL", description: "Database management and querying", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Windows Server & Linux OS Management", description: "Windows Server (2012-2019), RHEL, Ubuntu", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "ServiceNow ITSM, SolarWinds NPM, Commvault", description: "IT service management and monitoring", status: "Pending", link: "", start: "", end: "", notes: "" }
+    ],
 
-    <textarea id="description" placeholder="Description (what you covered)" rows="3" required></textarea>
+    "NOC Monitoring / Lead": [
+      { topic: "ServiceNow ITSM", description: "Incident and change management", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Amazon CloudWatch", description: "AWS resource monitoring and alarms", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "SolarWinds NPM", description: "Network performance monitoring", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Onboarding/Offboarding Nodes", description: "Manage node lifecycle for monitoring", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Server & Network Monitoring", description: "Escalation process and health checks", status: "Pending", link: "", start: "", end: "", notes: "" },
+      { topic: "Alarm Monitoring & Training", description: "Incident escalation and team training", status: "Pending", link: "", start: "", end: "", notes: "" }
+    ]
+  };
 
-    <input type="text" id="tools" placeholder="Tools/Platforms used (e.g. VS Code, Azure)" required>
+  // Storage Keys
+  const STORAGE_KEYS = {
+    SELECTED_ROLE: "selectedRole",
+    ROADMAP: "roadmapData",
+    CERTS: "certifications",
+    SKILLS: "skills"
+  };
 
-    <input type="text" id="source" placeholder="Where you learned (e.g. YouTube, Udemy)" required>
+  // DOM Elements
+  const roleSelectionScreen = document.getElementById("role-selection-screen");
+  const dashboard = document.getElementById("dashboard");
+  const roleTitleEl = document.getElementById("role-title");
+  const roadmapEl = document.getElementById("roadmap");
+  const backToRolesBtn = document.getElementById("back-to-roles");
+  const progressFill = document.getElementById("progress-fill");
+  const progressText = document.getElementById("progress-text");
+  const progressEmoji = document.getElementById("progress-emoji");
 
-    <button type="submit">Add Study Entry</button>
-  </form>
+  const certForm = document.getElementById("add-cert-form");
+  const certList = document.getElementById("cert-list");
 
-  <div id="topicList"></div>
+  const skillForm = document.getElementById("add-skill-form");
+  const skillList = document.getElementById("skill-list");
 
-  <script>
-    const form = document.getElementById('studyForm');
-    const topicList = document.getElementById('topicList');
+  let selectedRole = null;
+  let roadmapData = {};
 
-    let studies = JSON.parse(localStorage.getItem('studies')) || [];
-
-    function render() {
-      topicList.innerHTML = '';
-      if (studies.length === 0) {
-        topicList.innerHTML = '<p>No study records yet.</p>';
-        return;
+  // Helper - Load roadmap from localStorage or initialize fresh for selected role
+  function loadRoadmap(role) {
+    const stored = localStorage.getItem(STORAGE_KEYS.ROADMAP);
+    if (stored) {
+      const allRoadmaps = JSON.parse(stored);
+      if (allRoadmaps[role]) {
+        return allRoadmaps[role];
       }
-      studies.forEach(study => {
-        topicList.innerHTML += `
-          <div class="entry">
-            <div><span class="label">Topic:</span> ${study.topic}</div>
-            <div><span class="label">Start:</span> ${new Date(study.startDateTime).toLocaleString()}</div>
-            <div><span class="label">End:</span> ${new Date(study.endDateTime).toLocaleString()}</div>
-            <div><span class="label">Duration:</span> ${study.duration} hours</div>
-            <div><span class="label">Description:</span> ${study.description}</div>
-            <div><span class="label">Tools/Platforms:</span> ${study.tools}</div>
-            <div><span class="label">Source:</span> ${study.source}</div>
-          </div>`;
-      });
     }
+    // Deep copy from template to avoid mutation
+    return JSON.parse(JSON.stringify(roadmapsTemplate[role]));
+  }
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      
-      const topic = document.getElementById('topic').value.trim();
-      const startDateTime = document.getElementById('startDateTime').value;
-      const endDateTime = document.getElementById('endDateTime').value;
-      const description = document.getElementById('description').value.trim();
-      const tools = document.getElementById('tools').value.trim();
-      const source = document.getElementById('source').value.trim();
+  // Save roadmap to localStorage
+  function saveRoadmap(role, roadmap) {
+    let allRoadmaps = {};
+    const stored = localStorage.getItem(STORAGE_KEYS.ROADMAP);
+    if (stored) {
+      allRoadmaps = JSON.parse(stored);
+    }
+    allRoadmaps[role] = roadmap;
+    localStorage.setItem(STORAGE_KEYS.ROADMAP, JSON.stringify(allRoadmaps));
+  }
 
-      // Calculate duration in hours to one decimal place
-      const start = new Date(startDateTime);
-      const end = new Date(endDateTime);
-      const diffMs = end - start;
-      if (diffMs <= 0) {
-        alert('End date/time must be after start date/time.');
-        return;
-      }
-      const duration = (diffMs / (1000 * 60 * 60)).toFixed(1);
+  // Load certifications and skills
+  function loadCertifications() {
+    const stored = localStorage.getItem(STORAGE_KEYS.CERTS);
+    return stored ? JSON.parse(stored) : [];
+  }
+  function saveCertifications(certs) {
+    localStorage.setItem(STORAGE_KEYS.CERTS, JSON.stringify(certs));
+  }
+  function loadSkills() {
+    const stored = localStorage.getItem(STORAGE_KEYS.SKILLS);
+    return stored ? JSON.parse(stored) : [];
+  }
+  function saveSkills(skills) {
+    localStorage.setItem(STORAGE_KEYS.SKILLS, JSON.stringify(skills));
+  }
 
-      studies.push({ topic, startDateTime, endDateTime, duration, description, tools, source });
-      localStorage.setItem('studies', JSON.stringify(studies));
-      form.reset();
-      render();
+  // Format date time strings nicely
+  function formatDate(dateStr) {
+    if (!dateStr) return "Not specified";
+    const dt = new Date(dateStr);
+    if (isNaN(dt)) return "Invalid Date";
+    return dt.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  }
+
+  // Calculate and display progress %
+  function calculateProgress(roadmap) {
+    const total = roadmap.length;
+    if (total === 0) return 0;
+    const finished = roadmap.filter((t) => t.status === "Finished").length;
+    return Math.round((finished / total) * 100);
+  }
+
+  // Get emoji for progress % (fun graphics)
+  function progressEmojiForPercent(percent) {
+    if (percent === 100) return "🏆🎉";
+    if (percent >= 80) return "🚀🔥";
+    if (percent >= 50) return "👍🙂";
+    if (percent >= 20) return "⏳🤞";
+    return "🐢😴";
+  }
+
+  // Render roadmap topics list UI with editing on each topic
+  function renderRoadmap() {
+    roadmapEl.innerHTML = "";
+    roadmapData.forEach((topic, index) => {
+      const topicDiv = document.createElement("div");
+      topicDiv.className = "topic-card";
+
+      topicDiv.innerHTML = `
+        <div class="topic-header">
+          <div class="topic-title">${topic.topic} <span>${statusEmoji(topic.status)}</span></div>
+
+          <select class="status-select" data-index="${index}" aria-label="Status select for ${topic.topic}">
+            <option value="Pending" ${topic.status === "Pending" ? "selected" : ""}>Pending ⏳</option>
+            <option value="In Progress" ${topic.status === "In Progress" ? "selected" : ""}>In Progress 🔄</option>
+            <option value="Finished" ${topic.status === "Finished" ? "selected" : ""}>Finished ✅</option>
+          </select>
+        </div>
+        <div class="topic-details">
+          <p><span class="label">Description:</span> ${topic.description}</p>
+          <p><span class="label emoji-label">🎥</span> <a href="${escapeHtml(topic.link)}" target="_blank" rel="noopener noreferrer">${topic.link || "No link provided"}</a></p>
+
+          <div class="study-info">
+            <div><span class="label emoji-label">⏳</span> Start: ${formatDate(topic.start)}</div>
+            <div><span class="label emoji-label">⏲️</span> End: ${formatDate(topic.end)}</div>
+            <div><span class="label emoji-label">📝</span> Notes: ${topic.notes || "-"}</div>
+          </div>
+
+          <form class="topic-edit-form" data-index="${index}" aria-label="Edit form for ${topic.topic}">
+            <label>
+              Link to Material: <input type="url" name="link" value="${escapeHtml(topic.link)}" placeholder="https://..."/>
+            </label><br/>
+            <label>
+              Start Date & Time: <input type="datetime-local" name="start" value="${topic.start ? topic.start.substring(0,16) : ''}" />
+            </label><br/>
+            <label>
+              End Date & Time: <input type="datetime-local" name="end" value="${topic.end ? topic.end.substring(0,16) : ''}" />
+            </label><br/>
+            <label>
+              Notes: <textarea name="notes" rows="3" placeholder="Type your notes here">${escapeHtml(topic.notes)}</textarea>
+            </label><br/>
+            <button type="submit" aria-label="Save topic ${topic.topic} details">Save</button>
+          </form>
+        </div>
+      `;
+
+      roadmapEl.appendChild(topicDiv);
     });
 
-    render();
-  </script>
+    // Update progress bar
+    const percent = calculateProgress(roadmapData);
+    progressFill.style.width = `${percent}%`;
+    progressText.textContent = `${percent}% Completed`;
+    progressEmoji.textContent = progressEmojiForPercent(percent);
+
+    // Add event listeners for selects and forms
+    roadmapEl.querySelectorAll("select.status-select").forEach((sel) => {
+      sel.addEventListener("change", onStatusChange);
+    });
+    roadmapEl.querySelectorAll("form.topic-edit-form").forEach((form) => {
+      form.addEventListener("submit", onTopicEditSubmit);
+    });
+  }
+
+  // Escape HTML for security
+  function escapeHtml(text) {
+    if (!text) return "";
+    return text.replace(/[&<>"'`=\/]/g, function (s) {
+      return ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+        "/": "&#x2F;",
+        "`": "&#x60;",
+        "=": "&#x3D;"
+      })[s];
+    });
+  }
+
+  // Status emoji
+  function statusEmoji(status) {
+    switch(status) {
+      case "Pending": return "⏳";
+      case "In Progress": return "🔄";
+      case "Finished": return "✅";
+      default: return "";
+    }
+  }
+
+  // Handle status select change
+  function onStatusChange(e) {
+    const index = e.target.getAttribute("data-index");
+    roadmapData[index].status = e.target.value;
+    saveRoadmap(selectedRole, roadmapData);
+    renderRoadmap();
+  }
+
+  // Handle topic edit form submit
+  function onTopicEditSubmit(e) {
+    e.preventDefault();
+    const index = e.target.getAttribute("data-index");
+    const formData = new FormData(e.target);
+    const topic = roadmapData[index];
+
+    topic.link = formData.get("link").trim();
+    topic.start = formData.get("start");
+    topic.end = formData.get("end");
+    topic.notes = formData.get("notes").trim();
+
+    saveRoadmap(selectedRole, roadmapData);
+    renderRoadmap();
+  }
+
+  // Render Certifications list
+  function renderCertifications() {
+    const certs = loadCertifications();
+    certList.innerHTML = "";
+    if (certs.length === 0) {
+      certList.innerHTML = "<p>No certifications added yet.</p>";
+      return;
+    }
+    certs.forEach((cert, index) => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div class="item-details"><strong>${escapeHtml(cert.name)}</strong> - Completed on: ${cert.date}</div>
+        <div class="item-actions">
+          <button aria-label="Delete certification ${cert.name}" data-index="${index}">Delete</button>
+        </div>
+      `;
+      certList.appendChild(div);
+    });
+    certList.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = btn.getAttribute("data-index");
+        deleteCertification(idx);
+      });
+    });
+  }
+
+  // Delete certification
+  function deleteCertification(idx) {
+    const certs = loadCertifications();
+    certs.splice(idx, 1);
+    saveCertifications(certs);
+    renderCertifications();
+  }
+
+  // Render Skills list
+  function renderSkills() {
+    const skills = loadSkills();
+    skillList.innerHTML = "";
+    if (skills.length === 0) {
+      skillList.innerHTML = "<p>No skills or achievements added yet.</p>";
+      return;
+    }
+    skills.forEach((skill, index) => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div class="item-details">${escapeHtml(skill)}</div>
+        <div class="item-actions">
+          <button aria-label="Delete skill ${skill}" data-index="${index}">Delete</button>
+        </div>
+      `;
+      skillList.appendChild(div);
+    });
+    skillList.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = btn.getAttribute("data-index");
+        deleteSkill(idx);
+      });
+    });
+  }
+
+  // Delete skill
+  function deleteSkill(idx) {
+    const skills = loadSkills();
+    skills.splice(idx, 1);
+    saveSkills(skills);
+    renderSkills();
+  }
+
+  // Event on role card click
+  document.querySelectorAll(".role-card").forEach(card => {
+    card.addEventListener("click", () => {
+      selectedRole = card.getAttribute("data-role");
+      roleTitleEl.textContent = `${selectedRole} Roadmap & Progress`;
+      roleSelectionScreen.style.display = "none";
+      dashboard.style.display = "block";
+
+      roadmapData = loadRoadmap(selectedRole);
+      renderRoadmap();
+
+      renderCertifications();
+      renderSkills();
+
+      localStorage.setItem(STORAGE_KEYS.SELECTED_ROLE, selectedRole);
+    });
+  });
+
+  // Back to role selection
+  backToRolesBtn.addEventListener("click", () => {
+    dashboard.style.display = "none";
+    roleSelectionScreen.style.display = "block";
+    selectedRole = null;
+    localStorage.removeItem(STORAGE_KEYS.SELECTED_ROLE);
+  });
+
+  // On page load, check saved role
+  window.addEventListener("load", () => {
+    const savedRole = localStorage.getItem(STORAGE_KEYS.SELECTED_ROLE);
+    if (savedRole && roadmapsTemplate[savedRole]) {
+      selectedRole = savedRole;
+      roleTitleEl.textContent = `${selectedRole} Roadmap & Progress`;
+      roleSelectionScreen.style.display = "none";
+      dashboard.style.display = "block";
+      roadmapData = loadRoadmap(selectedRole);
+      renderRoadmap();
+
+      renderCertifications();
+      renderSkills();
+    }
+  });
+
+  // Certification form submit
+  certForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById("cert-name");
+    const dateInput = document.getElementById("cert-date");
+
+    const certs = loadCertifications();
+    certs.push({ name: nameInput.value.trim(), date: dateInput.value });
+    saveCertifications(certs);
+
+    nameInput.value = "";
+    dateInput.value = "";
+    renderCertifications();
+  });
+
+  // Skills form submit
+  skillForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const skillInput = document.getElementById("skill-name");
+    const skills = loadSkills();
+    skills.push(skillInput.value.trim());
+    saveSkills(skills);
+
+    skillInput.value = "";
+    renderSkills();
+  });
+</script>
 </body>
 </html>
