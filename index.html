@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Study Tracker - Admin & User Role Management</title>
+<title>Study Tracker with Admin and Role Details</title>
 <style>
   body {
     font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
@@ -116,6 +116,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    cursor: pointer;
   }
   .remove-btn {
     background: #e53935;
@@ -126,6 +127,28 @@
     height: 22px;
     font-weight: 900;
     cursor: pointer;
+    margin-left: 8px;
+  }
+  /* Role detail page */
+  #role-details-container {
+    max-width: 600px;
+    background: white;
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    margin-top: 20px;
+  }
+  #back-to-roles-btn {
+    background: #004aad;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    cursor: pointer;
+    margin-bottom: 15px;
+  }
+  #back-to-roles-btn:hover {
+    background: #00337f;
   }
 </style>
 </head>
@@ -167,24 +190,27 @@
   <button id="add-master-role-btn">Add Role</button>
 </div>
 
-<script>
-  // Predefined admin user credentials
-  const ADMIN_USERNAME = "admin";
-  const ADMIN_PASSWORD_HASH = hashPassword("MyNewPass@2025");
+<!-- Role Details Container -->
+<div class="container hidden" id="role-details-container">
+  <button id="back-to-roles-btn">← Back to Roles</button>
+  <h3 id="role-detail-title"></h3>
+  <p id="role-detail-desc"></p>
+</div>
 
-  // Load users and ensure admin user is present with correct password hash (fixed loadUsers function)
+<script>
+  const ADMIN_USERNAME = "admin";
+  const ADMIN_PASSWORD_HASH = hashPassword("12345");
+
   function loadUsers() {
     let stored = localStorage.getItem("users");
     let users;
     if (!stored) {
-      // No users saved yet, initialize with admin
       users = {
         [ADMIN_USERNAME]: { password: ADMIN_PASSWORD_HASH, data: { roles: [] } }
       };
       localStorage.setItem("users", JSON.stringify(users));
     } else {
       users = JSON.parse(stored);
-      // Add or update admin user to ensure correct password
       if (!users[ADMIN_USERNAME] || users[ADMIN_USERNAME].password !== ADMIN_PASSWORD_HASH) {
         users[ADMIN_USERNAME] = { password: ADMIN_PASSWORD_HASH, data: { roles: [] } };
         localStorage.setItem("users", JSON.stringify(users));
@@ -226,7 +252,7 @@
     return hash.toString();
   }
 
-  // App State
+  // State
   let users = loadUsers();
   let masterRoles = loadMasterRoles();
   let currentUser = null;
@@ -236,6 +262,7 @@
   const authContainer = document.getElementById("auth-container");
   const userContainer = document.getElementById("user-container");
   const adminContainer = document.getElementById("admin-container");
+  const roleDetailsContainer = document.getElementById("role-details-container");
 
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
@@ -259,6 +286,10 @@
   const addMasterRoleBtn = document.getElementById("add-master-role-btn");
 
   const formTitle = document.getElementById("form-title");
+
+  const roleDetailTitle = document.getElementById("role-detail-title");
+  const roleDetailDesc = document.getElementById("role-detail-desc");
+  const backToRolesBtn = document.getElementById("back-to-roles-btn");
 
   // Toggle login/signup UI
   toggleAuth.addEventListener("click", () => {
@@ -306,6 +337,7 @@
   // Show user or admin dashboard after login
   function showAppropriateDashboard() {
     authContainer.classList.add("hidden");
+    roleDetailsContainer.classList.add("hidden");
     if (currentUser === "admin") {
       showAdminDashboard();
     } else {
@@ -316,6 +348,7 @@
   // Show admin dashboard
   function showAdminDashboard() {
     userContainer.classList.add("hidden");
+    roleDetailsContainer.classList.add("hidden");
     adminContainer.classList.remove("hidden");
     adminWelcomeMsg.textContent = `Welcome, Admin!`;
     renderMasterRoles();
@@ -324,6 +357,7 @@
   // Show user dashboard
   function showUserDashboard() {
     adminContainer.classList.add("hidden");
+    roleDetailsContainer.classList.add("hidden");
     userContainer.classList.remove("hidden");
     welcomeMsg.textContent = `Welcome, ${currentUser}!`;
     roleSearchInput.value = "";
@@ -336,6 +370,7 @@
     currentUser = null;
     sessionStorage.removeItem("currentUser");
     userContainer.classList.add("hidden");
+    roleDetailsContainer.classList.add("hidden");
     authContainer.classList.remove("hidden");
     usernameInput.value = "";
     passwordInput.value = "";
@@ -457,7 +492,6 @@
       alert("Role already added");
       return;
     }
-    // Add role with empty roadmap to personal list for now
     userData.roles.push({ title: role.title, description: role.description || "", roadmap: [] });
     saveUsers(users);
     alert(`Role "${role.title}" added to your list!`);
@@ -466,7 +500,7 @@
     autocompleteList.innerHTML = "";
   }
 
-  // Render personal roles list for user
+  // Render personal roles list for user with ability to view details
   function renderPersonalRoles() {
     const userData = users[currentUser].data;
     const roles = userData.roles || [];
@@ -479,26 +513,51 @@
       const div = document.createElement("div");
       div.className = "personal-role";
       div.textContent = role.title;
+      div.title = "Click to view role details";
+      div.tabIndex = 0;
 
+      // On click or Enter key, show role details page
+      div.addEventListener("click", () => showRoleDetails(i));
+      div.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") showRoleDetails(i);
+      });
+
+      // Remove button
       const removeBtn = document.createElement("button");
       removeBtn.className = "remove-btn";
       removeBtn.title = `Remove ${role.title}`;
       removeBtn.textContent = "×";
-
-      removeBtn.addEventListener("click", () => {
+      removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         if (confirm(`Remove role: ${role.title}?`)) {
           roles.splice(i, 1);
           saveUsers(users);
           renderPersonalRoles();
+          hideRoleDetails();
         }
       });
-
       div.appendChild(removeBtn);
+
       personalRoleList.appendChild(div);
     });
   }
 
-  // On page load, check session and show proper UI
+  // Show role details page for user role
+  function showRoleDetails(index) {
+    const role = users[currentUser].data.roles[index];
+    roleDetailTitle.textContent = role.title;
+    roleDetailDesc.textContent = role.description || "No description provided.";
+    userContainer.classList.add("hidden");
+    roleDetailsContainer.classList.remove("hidden");
+  }
+
+  // Hide role details page and return to personal roles list
+  backToRolesBtn.addEventListener("click", () => {
+    roleDetailsContainer.classList.add("hidden");
+    userContainer.classList.remove("hidden");
+  });
+
+  // On page load, check session and show appropriate UI
   window.onload = () => {
     const savedUser = sessionStorage.getItem("currentUser");
     if(savedUser && users[savedUser]) {
