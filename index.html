@@ -1,336 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Study Tracker with Local User Auth</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Study Tracker - Login & Signup</title>
 <style>
   body {
-    font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh;
+    font-family: Arial, sans-serif; background: #f5f7fa; margin:0; min-height:100vh; display: flex; justify-content: center; align-items: center;
   }
   .container {
-    background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); max-width: 400px; width: 100%;
+    background: white;
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
   }
   h2 {
-    color: #004aad; margin-bottom: 16px;
+    color: #004aad;
   }
   input[type=text], input[type=password] {
-    width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 16px;
+    width: 100%;
+    padding: 10px 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
   }
   button {
-    background: #004aad; color: white; border: none; padding: 12px 20px; width: 100%; cursor: pointer; border-radius: 6px; font-weight: 700; font-size: 16px;
+    width: 100%;
+    background: #004aad;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
   }
   button:hover {
     background: #00337f;
   }
-  .switch {
-    margin-top: 12px;
-    font-size: 14px;
-    cursor: pointer;
+  .switch-auth {
+    margin-top: 15px;
     color: #004aad;
+    cursor: pointer;
     text-decoration: underline;
   }
-  #app {
-    display: none;
+  #logout-btn, #delete-account-btn {
+    margin: 10px 0 0 0;
+    background: #e53935;
   }
-  #logout-btn {
-    background: #e53935; width: auto; padding: 6px 14px; margin-bottom: 12px;
+  #logout-btn:hover, #delete-account-btn:hover {
+    background: #ab000d;
+  }
+  #welcome-msg {
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  #role-selection {
+    margin-top: 20px;
+    text-align: left;
+  }
+  #role-selection h3 {
+    color: #004aad;
+    margin-bottom: 10px;
+  }
+  #role-selection p {
+    color: #555;
   }
 </style>
 </head>
 <body>
 
-<div class="container">
-  
-  <div id="auth-section">
-    <h2 id="auth-title">Login</h2>
-    <input type="text" id="username" placeholder="Username" autocomplete="username" />
-    <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
-    <button id="auth-btn">Login</button>
-    <div class="switch" id="switch-auth">Don't have an account? Sign up here</div>
+<div class="container" id="auth-container">
+  <h2 id="form-title">Login</h2>
+  <input type="text" id="username" placeholder="Username" autocomplete="username" />
+  <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+  <button id="submit-btn">Login</button>
+  <div class="switch-auth" id="toggle-auth">Don't have an account? Sign up</div>
+</div>
+
+<div class="container" id="app-container" style="display:none;">
+  <div id="welcome-msg"></div>
+  <button id="logout-btn">Logout</button>
+  <button id="delete-account-btn">Delete Account</button>
+
+  <div id="role-selection">
+    <h3>Role Selection</h3>
+    <p>This section will show your roles and allow selection after next steps.</p>
   </div>
-
-  <div id="app">
-    <button id="logout-btn">Logout</button>
-    <h2>Welcome, <span id="welcome-user"></span>!</h2>
-
-    <h3>Select Your Role</h3>
-    <div id="role-selection"></div>
-
-    <form id="add-role-form" aria-label="Add New Role Form">
-      <input type="text" id="new-role-input" placeholder="Add new role title" />
-      <button type="submit">Add Role</button>
-    </form>
-
-    <div id="role-progress"></div>
-
-    <div id="dashboard" style="margin-top: 15px; display:none;">
-      <h3 id="role-title"></h3>
-      <button id="back-to-roles">&#8592; Back to Roles</button>
-      <div id="topic-list" style="margin-top:15px;"></div>
-    </div>
-  </div>
-
 </div>
 
 <script>
-  // User 'database' in localStorage - username: {password, data}
-  let users = JSON.parse(localStorage.getItem("users") || "{}");
+  // Predefine admin user (username: admin, password: Admin@123)
+  const predefinedUsers = {
+    admin: { password: hashPassword("Admin@123"), data: { roles: [] } }
+  };
 
+  // Load or initialize users in localStorage
+  function loadUsers() {
+    let stored = localStorage.getItem("users");
+    if(!stored) {
+      localStorage.setItem("users", JSON.stringify(predefinedUsers));
+      return {...predefinedUsers};
+    }
+    return JSON.parse(stored);
+  }
+
+  let users = loadUsers();
   let currentUser = null;
 
-  const authTitle = document.getElementById("auth-title");
+  const authContainer = document.getElementById("auth-container");
+  const appContainer = document.getElementById("app-container");
+
+  const formTitle = document.getElementById("form-title");
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
-  const authBtn = document.getElementById("auth-btn");
-  const switchAuth = document.getElementById("switch-auth");
+  const submitBtn = document.getElementById("submit-btn");
+  const toggleAuth = document.getElementById("toggle-auth");
 
-  const authSection = document.getElementById("auth-section");
-  const appSection = document.getElementById("app");
+  const welcomeMsg = document.getElementById("welcome-msg");
   const logoutBtn = document.getElementById("logout-btn");
-  const welcomeUser = document.getElementById("welcome-user");
+  const deleteAccountBtn = document.getElementById("delete-account-btn");
 
-  const roleSelectionEl = document.getElementById("role-selection");
-  const addRoleForm = document.getElementById("add-role-form");
-  const newRoleInput = document.getElementById("new-role-input");
+  let isLogin = true; // toggle between login/signup
 
-  const dashboardEl = document.getElementById("dashboard");
-  const backToRolesBtn = document.getElementById("back-to-roles");
-  const roleTitleEl = document.getElementById("role-title");
-  const topicListEl = document.getElementById("topic-list");
-  const roleProgressEl = document.getElementById("role-progress");
-
-  let selectedRoleIndex = null;
-
-  // Toggle between login and signup mode
-  let isLogin = true;
-  switchAuth.onclick = () => {
-    isLogin = !isLogin;
-    authTitle.textContent = isLogin ? "Login" : "Sign Up";
-    authBtn.textContent = isLogin ? "Login" : "Sign Up";
-    switchAuth.textContent = isLogin ? "Don't have an account? Sign up here" : "Already have an account? Login here";
-  };
-
-  // Hash simple (for demo only)
-  function simpleHash(str) {
-    let hash = 0;
-    for(let i=0; i<str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
+  // Simple hash function (NOT SECURE, just for demo)
+  function hashPassword(str) {
+    let hash = 0, i, chr;
+    if (str.length === 0) return hash.toString();
+    for (i = 0; i < str.length; i++) {
+      chr = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
     }
     return hash.toString();
   }
 
-  // Auth button click handler
-  authBtn.onclick = () => {
-    const user = usernameInput.value.trim();
-    const pass = passwordInput.value.trim();
-    if(!user || !pass) {
-      alert("Please enter username and password");
-      return;
-    }
-    if(isLogin) {
-      // Login
-      if(users[user] && users[user].password === simpleHash(pass)) {
-        currentUser = user;
-        startupForUser(user);
-      } else {
-        alert("Invalid username or password");
-      }
-    } else {
-      // Signup
-      if(users[user]) {
-        alert("Username already exists");
-        return;
-      }
-      users[user] = { password: simpleHash(pass), data: {roles:[]} };
-      localStorage.setItem("users", JSON.stringify(users));
-      alert("Signup successful! Please login.");
-      isLogin = true;
-      authTitle.textContent = "Login";
-      authBtn.textContent = "Login";
-      switchAuth.textContent = "Don't have an account? Sign up here";
-      usernameInput.value = "";
-      passwordInput.value = "";
-    }
-  };
-
-  // Start app for logged in user
-  function startupForUser(user) {
-    authSection.style.display = "none";
-    appSection.style.display = "block";
-    logoutBtn.style.display = "inline-block";
-    welcomeUser.textContent = user;
-    loadUserRoles();
-  }
-
-  // Load roles from user data
-  function loadUserRoles() {
-    const data = users[currentUser].data;
-    if(!data.roles) data.roles = [];
-    renderRoles(data.roles);
-    dashboardEl.style.display = "none";
-    selectedRoleIndex = null;
-    roleProgressEl.textContent = "";
-  }
-
-  // Render roles for user
-  function renderRoles(roles) {
-    roleSelectionEl.innerHTML = "";
-    if(roles.length === 0) {
-      roleSelectionEl.innerHTML = "<p>No roles added yet.</p>";
-      return;
-    }
-    roles.forEach((role, idx) => {
-      const div = document.createElement("div");
-      div.textContent = role.title;
-      div.style.padding = "10px 15px";
-      div.style.border = "1px solid #ddd";
-      div.style.margin = "8px 0";
-      div.style.borderRadius = "6px";
-      div.style.cursor = "pointer";
-      div.style.background = "#f0f8ff";
-      div.addEventListener("click", () => {
-        showDashboard(idx);
-      });
-      roleSelectionEl.appendChild(div);
-    });
-  }
-
-  // Show dashboard for selected role
-  function showDashboard(idx) {
-    selectedRoleIndex = idx;
-    const role = users[currentUser].data.roles[idx];
-    dashboardEl.style.display = "block";
-    roleTitleEl.textContent = role.title;
-    renderProgress(role);
-    renderTopics(role);
-    roleProgressEl.textContent = "";
-    roleSelectionEl.style.display = "none";
-    addRoleForm.style.display = "none";
-  }
-
-  // Render overall progress % for role
-  function renderProgress(role) {
-    const totalTopics = role.roadmap ? role.roadmap.length : 0;
-    if (totalTopics === 0) {
-      roleProgressEl.textContent = "";
-      return;
-    }
-    const finishedCount = role.roadmap.filter(t => t.status === "Finished").length;
-    const percent = Math.round((finishedCount / totalTopics) * 100);
-    roleProgressEl.innerHTML = `<strong>Progress:</strong> ${percent}% completed`;
-  }
-
-  // Render topics list for selected role
-  function renderTopics(role) {
-    topicListEl.innerHTML = "";
-    if (!role.roadmap || role.roadmap.length === 0) {
-      topicListEl.innerHTML = "<p>No topics found for this role yet.</p>";
-      return;
-    }
-    role.roadmap.forEach((topic, i) => {
-      const div = document.createElement("div");
-      div.textContent = topic.topic + " - " + topic.status;
-      div.style.padding = "8px";
-      div.style.borderBottom = "1px solid #eee";
-      div.style.cursor = "pointer";
-      div.addEventListener("click", () => {
-        alert(`Show detailed topic tracking view here for: ${topic.topic}\nYou can extend this to edit Status, Description etc.`);
-      });
-      topicListEl.appendChild(div);
-    });
-  }
-
-  // Add Role form submission
-  addRoleForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const newRole = newRoleInput.value.trim();
-    if(!newRole) {
-      alert("Please enter a role title");
-      return;
-    }
-    const data = users[currentUser].data;
-    data.roles = data.roles || [];
-    // Prevent duplicate role
-    if(data.roles.some(r => r.title.toLowerCase() === newRole.toLowerCase())) {
-      alert("This role already exists.");
-      return;
-    }
-    data.roles.push({ title: newRole, roadmap: [] });
-    users[currentUser].data = data;
-    localStorage.setItem("users", JSON.stringify(users));
-    newRoleInput.value = "";
-    renderRoles(data.roles);
-  });
-
-  // Logout button
-  logoutBtn.addEventListener("click", () => {
-    currentUser = null;
-    authSection.style.display = "block";
-    appSection.style.display = "none";
+  // Switch between login and signup UI
+  toggleAuth.addEventListener("click", () => {
+    isLogin = !isLogin;
+    formTitle.textContent = isLogin ? "Login" : "Sign Up";
+    submitBtn.textContent = isLogin ? "Login" : "Sign Up";
+    toggleAuth.textContent = isLogin ? "Don't have an account? Sign up" : "Already have an account? Login";
     usernameInput.value = "";
     passwordInput.value = "";
-    roleSelectionEl.style.display = "block";
-    addRoleForm.style.display = "block";
   });
 
-  // Check if already logged in (sessionStorage)
-  window.onload = () => {
-    let savedUser = sessionStorage.getItem("loggedInUser");
-    if(savedUser && users[savedUser]) {
-      currentUser = savedUser;
-      startupForUser(savedUser);
-    }
-  };
+  // Handle login/signup button click
+  submitBtn.addEventListener("click", () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
 
-  // Save current user to sessionStorage on login
-  function saveCurrentUserSession(username) {
-    sessionStorage.setItem("loggedInUser", username);
-  }
-
-  // After login
-  authBtn.onclick = () => {
-    const user = usernameInput.value.trim();
-    const pass = passwordInput.value.trim();
-    if(!user || !pass) {
-      alert("Please enter username and password");
+    if(!username || !password){
+      alert("Please enter username and password.");
       return;
     }
-    if(isLogin) {
-      if(users[user] && users[user].password === simpleHash(pass)) {
-        currentUser = user;
-        saveCurrentUserSession(user);
-        startupForUser(user);
+
+    if (isLogin){
+      // Login flow
+      if(users[username] && users[username].password === hashPassword(password)){
+        currentUser = username;
+        sessionStorage.setItem("currentUser", currentUser);
+        showApp();
       } else {
-        alert("Invalid username or password");
+        alert("Invalid username or password.");
       }
     } else {
-      if(users[user]) {
-        alert("Username already exists");
+      // Signup flow
+      if(users[username]){
+        alert("Username already exists. Choose another.");
         return;
       }
-      users[user] = { password: simpleHash(pass), data: {roles:[]} };
+      users[username] = {password: hashPassword(password), data: {roles: []}};
       localStorage.setItem("users", JSON.stringify(users));
-      alert("Signup successful! Please login.");
+      alert("Account created! You can now login.");
       isLogin = true;
-      authTitle.textContent = "Login";
-      authBtn.textContent = "Login";
-      switchAuth.textContent = "Don't have an account? Sign up here";
+      formTitle.textContent = "Login";
+      submitBtn.textContent = "Login";
+      toggleAuth.textContent = "Don't have an account? Sign up";
       usernameInput.value = "";
       passwordInput.value = "";
     }
-  };
+  });
 
-  // Hash function for simplicity
-  function simpleHash(str) {
-    let hash = 0;
-    for(let i=0;i<str.length;i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
-    }
-    return hash.toString();
+  // Show main app after login
+  function showApp() {
+    authContainer.style.display = "none";
+    appContainer.style.display = "block";
+    welcomeMsg.textContent = "Welcome, " + currentUser + "!";
   }
+
+  // Logout action
+  logoutBtn.addEventListener("click", () => {
+    currentUser = null;
+    sessionStorage.removeItem("currentUser");
+    authContainer.style.display = "block";
+    appContainer.style.display = "none";
+    usernameInput.value = "";
+    passwordInput.value = "";
+  });
+
+  // Delete account action with confirmation
+  deleteAccountBtn.addEventListener("click", () => {
+    if(confirm("Are you sure you want to delete your account? This action cannot be undone.")){
+      if(users[currentUser]){
+        delete users[currentUser];
+        localStorage.setItem("users", JSON.stringify(users));
+        logoutBtn.click();
+        alert("Your account has been deleted.");
+      }
+    }
+  });
+
+  // On page load, check session
+  window.onload = () => {
+    const savedUser = sessionStorage.getItem("currentUser");
+    if(savedUser && users[savedUser]){
+      currentUser = savedUser;
+      showApp();
+    }
+  };
 </script>
 
 </body>
