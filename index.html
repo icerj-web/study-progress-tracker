@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Study Progress Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #topicList { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Study Progress Tracker</h1>
+  <form id="studyForm">
+    <input type="text" id="topic" placeholder="Topic name" required>
+    <input type="number" id="hours" placeholder="Hours studied" min="0" step="0.1" required>
+    <button type="submit">Add Study Entry</button>
+  </form>
+
+  <div id="topicList"></div>
+
+  <script>
+    const form = document.getElementById('studyForm');
+    const topicList = document.getElementById('topicList');
+
+    let studies = JSON.parse(localStorage.getItem('studies')) || [];
+
+    function render() {
+      topicList.innerHTML = '';
+      if (studies.length === 0) {
+        topicList.innerHTML = '<p>No study records yet.</p>';
+        return;
+      }
+      studies.forEach(study => {
+        topicList.innerHTML += `<p><strong>${study.topic}</strong> - ${study.hours} hours</p>`;
+      });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const topic = document.getElementById('topic').value.trim();
+      const hours = parseFloat(document.getElementById('hours').value);
+      studies.push({ topic, hours });
+      localStorage.setItem('studies', JSON.stringify(studies));
+      form.reset();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
