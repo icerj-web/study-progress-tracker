@@ -3,20 +3,24 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Study Progress Dashboard</title>
+<title>Professional Study Tracker - Vaishnavi Radhrishnan</title>
 <style>
-  /* Reset and basics */
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box;}
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    background: #f5f7fa;
-    color: #333;
+    margin: 0; background: #f5f7fa; color: #333; min-height: 100vh;
+    display: flex; flex-direction: column;
   }
-  h1, h2, h3 {
-    margin-bottom: 0.25em;
+  .container {
+    max-width: 1150px;
+    margin: auto;
+    padding: 1rem;
+    flex: 1 0 auto;
+  }
+  h1, h2, h3, h4 {
+    margin: 0.3rem 0;
+    font-weight: 700;
+    color: #004aad;
   }
   a {
     color: #0066cc;
@@ -26,19 +30,12 @@
     text-decoration: underline;
   }
 
-  /* Layout Container */
-  .container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 1rem;
-  }
-
-  /* Role selection */
+  /* Role selection - with add/delete */
   #role-selection {
     display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 2rem;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 1rem;
   }
   .role-card {
     background: white;
@@ -47,8 +44,9 @@
     box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
     cursor: pointer;
     text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     width: 220px;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .role-card:hover {
     transform: scale(1.05);
@@ -56,80 +54,94 @@
   }
   .role-emoji {
     font-size: 3rem;
-    margin-bottom: 10px;
+    margin-bottom: 0.6rem;
+  }
+  .role-delete {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: #e53935;
+    border: none;
+    color: white;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    line-height: 18px;
+    cursor: pointer;
+    font-size: 16px;
+    display: none;
+  }
+  .role-card:hover .role-delete {
+    display: block;
   }
 
-  /* Dashboard Header */
+  #add-role-form {
+    margin-top: 1.5rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
+    max-width: 400px;
+  }
+  #add-role-form input[type=text] {
+    width: 70%;
+    padding: 8px;
+    margin-right: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+  #add-role-form input[type=text]:focus {
+    border-color: #004aad;
+    outline: none;
+  }
+  #add-role-form button {
+    background: #004aad;
+    border: none;
+    color: white;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  #add-role-form button:hover {
+    background: #00337f;
+  }
+
+  /* Dashboard container */
+  #dashboard {
+    display: none;
+    margin-top: 1rem;
+  }
   #dashboard-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
   #dashboard-header button {
-    background:#004aad;
-    border:none;
+    background: #004aad;
+    border: none;
     color: white;
-    padding: 10px 16px;
+    padding: 9px 16px;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: 700;
   }
   #dashboard-header button:hover {
-    background:#00337f;
+    background: #00337f;
   }
-
-  /* Roadmap & topics list */
-  #roadmap {
-    margin-top: 1rem;
-  }
-  .topic-card {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 10px rgb(0 0 0 / 0.05);
-    transition: box-shadow 0.2s ease;
-  }
-  .topic-card:hover {
-    box-shadow: 0 10px 15px rgb(0 0 0 / 0.1);
-  }
-  .topic-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .topic-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-  }
-  .status-select {
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    padding: 4px 8px;
-    font-weight: 600;
-  }
-
-  /* Labels in cards */
-  .label {
-    font-weight: 700;
-    color: #004aad;
-  }
-
-  /* Progress bar container */
-  #progress-container {
-    margin-top: 30px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
-    padding: 20px;
-    max-width: 700px;
+  #role-progress {
+    margin-top: 10px;
+    max-width: 400px;
   }
   #progress-bar {
     width: 100%;
-    height: 25px;
+    height: 22px;
     background: #ddd;
     border-radius: 15px;
     overflow: hidden;
-    margin-top: 8px;
+    margin-top: 6px;
   }
   #progress-fill {
     height: 100%;
@@ -138,380 +150,466 @@
     transition: width 0.6s ease;
   }
   #progress-text {
-    margin-top: 6px;
+    margin-top: 4px;
     font-weight: 600;
-  }
-
-  /* Detailed Topic info */
-  .topic-details {
-    margin-top: 10px;
-    font-size: 0.95rem;
-    color: #444;
-  }
-  .topic-details a {
-    word-break: break-all;
-  }
-  .study-info {
-    margin-top: 8px;
-    font-size: 0.9rem;
-    color: #555;
-  }
-  .emoji-label {
-    margin-right: 6px;
     font-size: 1.1rem;
+    color: #004aad;
+  }
+  #progress-emoji {
+    font-size: 1.5rem;
+    margin-left: 10px;
+    vertical-align: middle;
   }
 
-  /* Form styling */
-  #add-cert-form, #add-skill-form {
+  /* Roadmap list, topic, subtopic styling */
+  .topic-list, .subtopic-list {
+    margin-top: 1.5rem;
+  }
+  .topic-card, .subtopic-card {
     background: white;
-    padding: 15px;
+    padding: 14px 18px;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
-    margin-top: 20px;
-    max-width: 600px;
-  }
-  #add-cert-form h3, #add-skill-form h3 {
-    margin-top: 0;
-  }
-  #add-cert-form input, #add-skill-form input {
-    width: 100%;
-    padding: 8px;
-    margin: 8px 0 12px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 1rem;
-  }
-  #add-cert-form button, #add-skill-form button {
-    background: #004aad;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-  #add-cert-form button:hover, #add-skill-form button:hover {
-    background: #00337f;
-  }
-
-  /* Certifications and Skills Sections */
-  #certifications, #skills-achieved {
-    margin-top: 3rem;
-  }
-  .item-list {
-    margin-top: 15px;
-  }
-  .item {
-    background: white;
-    padding: 12px 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
     margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+    cursor: pointer;
+    transition: box-shadow 0.3s ease;
+  }
+  .topic-card:hover, .subtopic-card:hover {
+    box-shadow: 0 8px 18px rgb(0 0 0 / 0.12);
+  }
+  .topic-title, .subtopic-title {
+    font-size: 1.25rem;
+    font-weight: 700;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .item-details {
-    max-width: 85%;
+
+  /* Topic details */
+  #topic-details {
+    display: none;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgb(0 0 0 / 0.1);
+    margin-top: 1rem;
+    max-width: 800px;
   }
-  .item-actions button {
-    background: #e53935;
-    border: none;
-    color: white;
+  #topic-details textarea {
+    width: 100%;
+    height: 70px;
+    font-size: 1rem;
+    padding: 8px;
     border-radius: 6px;
-    padding: 6px 10px;
+    border: 1px solid #ccc;
+    resize: vertical;
+  }
+  #topic-details textarea:focus {
+    outline: none;
+    border-color: #004aad;
+  }
+  #topic-details label {
+    font-weight: 600;
+    margin-top: 10px;
+    display: block;
+    color: #004aad;
+  }
+  #topic-details input[type=url], #topic-details input[type=datetime-local], #topic-details select {
+    width: 100%;
+    padding: 7px;
+    margin-top: 4px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+  #topic-details input[type=url]:focus, #topic-details input[type=datetime-local]:focus, #topic-details select:focus {
+    border-color: #004aad;
+    outline: none;
+  }
+  #topic-details button {
+    margin-top: 12px;
+    background: #004aad;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 700;
   }
-  .item-actions button:hover {
-    background: #ab000d;
+  #topic-details button:hover {
+    background: #00337f;
+  }
+  #topic-details .back-btn {
+    background: #bbb;
+    margin-right: 10px;
+  }
+  #topic-details .back-btn:hover {
+    background: #999;
   }
 
-  /* Scroll container */
-  #app {
-    padding-bottom: 100px;
+  /* Subtopic card detail */
+  .subtopic-status {
+    font-weight: 700;
+  }
+  .status-pending { color: #d97706; } /* amber-600 */
+  .status-inprogress { color: #2563eb; } /* blue-600 */
+  .status-finished { color: #16a34a; } /* green-600 */
+
+  /* Skill / Tools Section */
+  #skills-tools {
+    margin-top: 2rem;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+    max-width: 700px;
+  }
+  .skill-group {
+    margin-bottom: 1rem;
+  }
+  .skill-group h4 {
+    margin-bottom: 8px;
+  }
+  .skill-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  .skill-list li {
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  
+  /* Footer */
+  footer {
+    text-align: center;
+    background: #004aad;
+    color: white;
+    padding: 12px 0;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .role-card {
+      width: 100%;
+    }
   }
 </style>
 </head>
 <body>
-<div class="container" id="app">
 
-  <!-- Role Selection Screen -->
-  <section id="role-selection-screen">
-    <h1>Choose Your Role to Start Your Roadmap <span style="font-size:1.5rem;">🎯</span></h1>
-    <div id="role-selection">
-      <div class="role-card" data-role="DevOps Engineer">
-        <div class="role-emoji">🚀</div>
-        <div><strong>DevOps Engineer</strong></div>
+<div class="container">
+
+  <h1>Professional Study Tracker</h1>
+  <p style="font-weight:600;">Created by Vaishnavi Radhrishnan <span>🎉</span></p>
+
+  <!-- Roles Section -->
+  <section id="role-section">
+    <h2>Your Roles <span>🎯</span></h2>
+    <div id="role-selection"></div>
+
+    <form id="add-role-form" aria-label="Add New Role Form">
+      <input type="text" id="new-role-input" placeholder="Enter new role title" aria-required="true" />
+      <button type="submit" aria-label="Add Role Button">Add Role</button>
+    </form>
+  </section>
+
+  <!-- Show progress outside dashboard -->
+  <div id="role-progress"></div>
+
+  <!-- Dashboard Section -->
+  <section id="dashboard">
+    <div id="dashboard-header">
+      <h2 id="role-title"></h2>
+      <button id="back-to-roles" aria-label="Back to roles selection">← Back to Roles</button>
+    </div>
+
+    <div id="roadmap-wrapper">
+      <h3>Main Topics <span>📚</span></h3>
+      <div id="topic-list" class="topic-list"></div>
+    </div>
+
+    <div id="skills-tools">
+      <h3>Tools and Skills <span>🛠️</span></h3>
+      <div class="skill-group">
+        <h4>Development / Infrastructure Tools</h4>
+        <ul id="dev-tools-list" class="skill-list"></ul>
       </div>
-      <div class="role-card" data-role="Infrastructure Engineer">
-        <div class="role-emoji">💻</div>
-        <div><strong>Infrastructure Engineer</strong></div>
-      </div>
-      <div class="role-card" data-role="NOC Monitoring / Lead">
-        <div class="role-emoji">🖥️</div>
-        <div><strong>NOC Monitoring / Lead</strong></div>
+      <div class="skill-group">
+        <h4>Monitoring Tools</h4>
+        <ul id="monitoring-tools-list" class="skill-list"></ul>
       </div>
     </div>
   </section>
 
-  <!-- Dashboard Screen -->
-  <section id="dashboard" style="display:none;">
-    <div id="dashboard-header">
-      <h2 id="role-title"></h2>
-      <button id="back-to-roles">← Change Role</button>
-    </div>
+  <!-- Topic Details Section -->
+  <section id="topic-details">
+    <h3 id="topic-details-title"></h3>
+    <p><strong>Description:</strong></p>
+    <textarea id="topic-desc" aria-label="Edit topic description"></textarea>
 
-    <div id="progress-container">
-      <h3>Overall Progress <span id="progress-emoji">📊</span></h3>
-      <div id="progress-bar">
-        <div id="progress-fill"></div>
-      </div>
-      <div id="progress-text"></div>
-    </div>
+    <p><strong>Progress: </strong><span id="topic-progress"></span>% <span id="topic-progress-emoji"></span></p>
 
-    <div id="roadmap"></div>
+    <h4>Subtopics <span>🧩</span></h4>
+    <div id="subtopic-list" class="subtopic-list"></div>
 
-    <!-- Certifications section -->
-    <section id="certifications" >
-      <h3>Certifications Dashboard <span style="font-size:1.3rem;">🎓</span></h3>
-      <form id="add-cert-form">
-        <h4>Add New Certification</h4>
-        <input type="text" id="cert-name" placeholder="Certification Name (e.g. Azure Administrator)" required />
-        <input type="date" id="cert-date" placeholder="Completion Date" required />
-        <button type="submit">Add Certification</button>
-      </form>
-      <div class="item-list" id="cert-list"></div>
-    </section>
-
-    <!-- Skills achieved section -->
-    <section id="skills-achieved">
-      <h3>Skills & Achievements Dashboard <span style="font-size:1.3rem;">🏆</span></h3>
-      <form id="add-skill-form">
-        <h4>Add New Skill / Achievement</h4>
-        <input type="text" id="skill-name" placeholder="Skill or Achievement Name" required />
-        <button type="submit">Add Skill</button>
-      </form>
-      <div class="item-list" id="skill-list"></div>
-    </section>
+    <button class="back-btn" id="back-to-main">← Back to Topics</button>
+    <button id="save-topic-details">Save Changes</button>
   </section>
 
 </div>
 
+<footer>
+  Professional Website &copy; 2025 - Created by Vaishnavi Radhrishnan
+</footer>
+
 <script>
-  // Roadmap Data by Role with initial topics
-  const roadmapsTemplate = {
-    "DevOps Engineer": [
-      { topic: "Linux & Shell Scripting", description: "Master Linux basics, shell scripting for automation", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Git & GitHub", description: "Version control and collaboration platforms", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Containerization with Docker", description: "Building and running container images", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Kubernetes (AKS)", description: "Container orchestration and management", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "CI/CD with Jenkins & Azure DevOps", description: "Pipeline creation and deployments", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Infrastructure as Code: Terraform, ARM Templates", description: "IaC and automation", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Monitoring Tools: Grafana, Prometheus, SonarQube", description: "Monitor, analyze and improve performance", status: "Pending", link: "", start: "", end: "", notes: "" }
-    ],
-    
-    "Infrastructure Engineer": [
-      { topic: "Microsoft Azure Core", description: "VMs, Resource Groups, Storage, Networking", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "AWS Core Services", description: "EC2, IAM, VPC, CloudWatch, S3, RDS", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "VMware vSphere 7/8", description: "Virtualization platform management", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Networking: DNS, DHCP, VPN, Load Balancers", description: "Fundamental networking protocols and tools", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Databases: MySQL, Oracle SQL", description: "Database management and querying", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Windows Server & Linux OS Management", description: "Windows Server (2012-2019), RHEL, Ubuntu", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "ServiceNow ITSM, SolarWinds NPM, Commvault", description: "IT service management and monitoring", status: "Pending", link: "", start: "", end: "", notes: "" }
-    ],
-
-    "NOC Monitoring / Lead": [
-      { topic: "ServiceNow ITSM", description: "Incident and change management", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Amazon CloudWatch", description: "AWS resource monitoring and alarms", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "SolarWinds NPM", description: "Network performance monitoring", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Onboarding/Offboarding Nodes", description: "Manage node lifecycle for monitoring", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Server & Network Monitoring", description: "Escalation process and health checks", status: "Pending", link: "", start: "", end: "", notes: "" },
-      { topic: "Alarm Monitoring & Training", description: "Incident escalation and team training", status: "Pending", link: "", start: "", end: "", notes: "" }
-    ]
+  // Data Keys
+  const ROLES_KEY = "studyTrackerRoles";
+  const SELECTED_ROLE_KEY = "studyTrackerSelectedRole";
+  const ROADMAP_KEY = "studyTrackerRoadmap";
+  
+  // Demo Emojis for progress percentages
+  const EMOJIS = {
+    100: "🏆🎉",
+    80: "🚀🔥",
+    50: "👍🙂",
+    20: "⏳🤞",
+    0: "🐢😴"
   };
+  function getEmojiForPercent(p){
+    if(p >= 100) return EMOJIS[100];
+    if(p >= 80) return EMOJIS[80];
+    if(p >= 50) return EMOJIS[50];
+    if(p >= 20) return EMOJIS[20];
+    return EMOJIS[0];
+  }
 
-  // Storage Keys
-  const STORAGE_KEYS = {
-    SELECTED_ROLE: "selectedRole",
-    ROADMAP: "roadmapData",
-    CERTS: "certifications",
-    SKILLS: "skills"
-  };
+  // Default roles & roadmaps sample - allows editing and adding new roles
+  let roles = JSON.parse(localStorage.getItem(ROLES_KEY)) || [
+    {
+      title: "DevOps Engineer",
+      roadmap: [
+        { id: "linux", topic: "Linux & Shell Scripting", status: "Pending",
+          description: "Master Linux basics and shell scripting for automation",
+          subtopics: [
+            {id: "linux-intro", title:"Linux Introduction", status: "Finished", notes:"Basic commands and terminal usage", link: "" },
+            {id: "shell", title:"Shell Scripting", status: "In Progress", notes:"Writing bash scripts", link: "" }
+          ]
+        },
+        { id: "git", topic: "Git & GitHub", status: "Pending",
+          description: "Version control and collaboration platforms",
+          subtopics: [
+            {id: "git-basic", title:"Git Basics", status: "Finished", notes:"Commit, branch basics", link:"https://git-scm.com/book/en/v2" },
+            {id: "github", title:"GitHub", status: "Pending", notes:"Pull requests and forks", link:"" }
+          ]
+        },
+        { id: "docker", topic:"Containerization with Docker", status: "Pending", description:"Building and running containers", subtopics: [] },
+        { id: "k8s", topic:"Kubernetes (AKS)", status:"Pending", description:"Container orchestration", subtopics: [] },
+        { id: "cicd", topic:"CI/CD with Jenkins & Azure DevOps", status:"Pending", description:"Pipeline setup and automation", subtopics: [] },
+        { id: "iac", topic:"Infrastructure as Code (Terraform, ARM Templates)", status:"Pending", description:"IaC automation", subtopics: [] },
+        { id: "monitoring", topic:"Monitoring Tools (Grafana, Prometheus, SonarQube)", status:"Pending", description:"Monitoring setup", subtopics: [] }
+      ],
+      devTools: ["Git & GitHub", "Docker", "Terraform", "Azure DevOps", "Jenkins"],
+      monitoringTools: ["Grafana", "Prometheus", "SonarQube"]
+    },
+    {
+      title: "Infrastructure Engineer",
+      roadmap: [
+        { id:"azure", topic:"Microsoft Azure Core", status:"Pending", description: "VMs, Storage, Networking", subtopics: [] },
+        { id:"aws", topic:"AWS Core Services", status:"Pending", description: "EC2, IAM, VPC, CloudWatch, S3", subtopics: [] },
+        { id:"vmware", topic:"VMware vSphere 7/8", status:"Pending", description:"Virtualization platform management", subtopics: [] },
+        { id:"networking", topic:"Networking: DNS, DHCP, VPN, Load Balancers", status:"Pending", description:"Networking essentials", subtopics: [] },
+        { id:"databases", topic:"MySQL, Oracle SQL", status:"Pending", description:"Databases basics", subtopics: [] },
+        { id:"os", topic:"Windows Server & Linux OS", status:"Pending", description:"OS management", subtopics: [] },
+        { id:"itsm", topic:"ServiceNow ITSM, SolarWinds, Commvault", status:"Pending", description:"IT management & monitoring", subtopics: [] }
+      ],
+      devTools: ["Azure Portal", "AWS Console", "VMware vSphere", "ServiceNow"],
+      monitoringTools: ["SolarWinds", "Commvault"]
+    },
+    {
+      title:"NOC Monitoring / Lead",
+      roadmap:[
+        { id:"servicenow", topic:"ServiceNow ITSM", status:"Pending", description:"Incident and change management", subtopics: [] },
+        { id:"cloudwatch", topic:"Amazon CloudWatch", status:"Pending", description:"AWS resource monitoring", subtopics: [] },
+        { id:"solarwinds", topic:"SolarWinds NPM", status:"Pending", description:"Network monitoring", subtopics: [] },
+        { id:"onboarding", topic:"Onboarding/Offboarding Nodes", status:"Pending", description:"Node lifecycle management", subtopics: [] },
+        { id:"monitoring", topic:"Server & Network Monitoring", status:"Pending", description:"Escalation and health checks", subtopics: [] },
+        { id:"alarm", topic:"Alarm Monitoring & Training", status:"Pending", description:"Incident escalation", subtopics: [] }
+      ],
+      devTools: ["ServiceNow", "Amazon CloudWatch"],
+      monitoringTools: ["SolarWinds"]
+    }
+  ];
+
+  // App State
+  let selectedRoleIndex = null;
+  let selectedTopicId = null;
 
   // DOM Elements
-  const roleSelectionScreen = document.getElementById("role-selection-screen");
-  const dashboard = document.getElementById("dashboard");
+  const roleSelectionEl = document.getElementById("role-selection");
+  const addRoleForm = document.getElementById("add-role-form");
+  const newRoleInput = document.getElementById("new-role-input");
+
+  const dashboardEl = document.getElementById("dashboard");
   const roleTitleEl = document.getElementById("role-title");
-  const roadmapEl = document.getElementById("roadmap");
   const backToRolesBtn = document.getElementById("back-to-roles");
-  const progressFill = document.getElementById("progress-fill");
-  const progressText = document.getElementById("progress-text");
-  const progressEmoji = document.getElementById("progress-emoji");
+  const roleProgressEl = document.getElementById("role-progress");
 
-  const certForm = document.getElementById("add-cert-form");
-  const certList = document.getElementById("cert-list");
+  const topicListEl = document.getElementById("topic-list");
+  const devToolsListEl = document.getElementById("dev-tools-list");
+  const monitoringToolsListEl = document.getElementById("monitoring-tools-list");
 
-  const skillForm = document.getElementById("add-skill-form");
-  const skillList = document.getElementById("skill-list");
+  const topicDetailsEl = document.getElementById("topic-details");
+  const topicDetailsTitleEl = document.getElementById("topic-details-title");
+  const topicDescEl = document.getElementById("topic-desc");
+  const topicProgressEl = document.getElementById("topic-progress");
+  const topicProgressEmojiEl = document.getElementById("topic-progress-emoji");
+  const subtopicListEl = document.getElementById("subtopic-list");
+  const backToMainBtn = document.getElementById("back-to-main");
+  const saveTopicDetailsBtn = document.getElementById("save-topic-details");
 
-  let selectedRole = null;
-  let roadmapData = {};
-
-  // Helper - Load roadmap from localStorage or initialize fresh for selected role
-  function loadRoadmap(role) {
-    const stored = localStorage.getItem(STORAGE_KEYS.ROADMAP);
-    if (stored) {
-      const allRoadmaps = JSON.parse(stored);
-      if (allRoadmaps[role]) {
-        return allRoadmaps[role];
-      }
-    }
-    // Deep copy from template to avoid mutation
-    return JSON.parse(JSON.stringify(roadmapsTemplate[role]));
+  // Utility: Save all roles to localStorage
+  function saveRoles() {
+    localStorage.setItem(ROLES_KEY, JSON.stringify(roles));
+  }
+  // Load roles from localStorage
+  function loadRoles() {
+    const stored = localStorage.getItem(ROLES_KEY);
+    if(stored) roles = JSON.parse(stored);
   }
 
-  // Save roadmap to localStorage
-  function saveRoadmap(role, roadmap) {
-    let allRoadmaps = {};
-    const stored = localStorage.getItem(STORAGE_KEYS.ROADMAP);
-    if (stored) {
-      allRoadmaps = JSON.parse(stored);
-    }
-    allRoadmaps[role] = roadmap;
-    localStorage.setItem(STORAGE_KEYS.ROADMAP, JSON.stringify(allRoadmaps));
-  }
-
-  // Load certifications and skills
-  function loadCertifications() {
-    const stored = localStorage.getItem(STORAGE_KEYS.CERTS);
-    return stored ? JSON.parse(stored) : [];
-  }
-  function saveCertifications(certs) {
-    localStorage.setItem(STORAGE_KEYS.CERTS, JSON.stringify(certs));
-  }
-  function loadSkills() {
-    const stored = localStorage.getItem(STORAGE_KEYS.SKILLS);
-    return stored ? JSON.parse(stored) : [];
-  }
-  function saveSkills(skills) {
-    localStorage.setItem(STORAGE_KEYS.SKILLS, JSON.stringify(skills));
-  }
-
-  // Format date time strings nicely
-  function formatDate(dateStr) {
-    if (!dateStr) return "Not specified";
-    const dt = new Date(dateStr);
-    if (isNaN(dt)) return "Invalid Date";
-    return dt.toLocaleString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  }
-
-  // Calculate and display progress %
-  function calculateProgress(roadmap) {
-    const total = roadmap.length;
-    if (total === 0) return 0;
-    const finished = roadmap.filter((t) => t.status === "Finished").length;
-    return Math.round((finished / total) * 100);
-  }
-
-  // Get emoji for progress % (fun graphics)
-  function progressEmojiForPercent(percent) {
-    if (percent === 100) return "🏆🎉";
-    if (percent >= 80) return "🚀🔥";
-    if (percent >= 50) return "👍🙂";
-    if (percent >= 20) return "⏳🤞";
-    return "🐢😴";
-  }
-
-  // Render roadmap topics list UI with editing on each topic
-  function renderRoadmap() {
-    roadmapEl.innerHTML = "";
-    roadmapData.forEach((topic, index) => {
-      const topicDiv = document.createElement("div");
-      topicDiv.className = "topic-card";
-
-      topicDiv.innerHTML = `
-        <div class="topic-header">
-          <div class="topic-title">${topic.topic} <span>${statusEmoji(topic.status)}</span></div>
-
-          <select class="status-select" data-index="${index}" aria-label="Status select for ${topic.topic}">
-            <option value="Pending" ${topic.status === "Pending" ? "selected" : ""}>Pending ⏳</option>
-            <option value="In Progress" ${topic.status === "In Progress" ? "selected" : ""}>In Progress 🔄</option>
-            <option value="Finished" ${topic.status === "Finished" ? "selected" : ""}>Finished ✅</option>
-          </select>
-        </div>
-        <div class="topic-details">
-          <p><span class="label">Description:</span> ${topic.description}</p>
-          <p><span class="label emoji-label">🎥</span> <a href="${escapeHtml(topic.link)}" target="_blank" rel="noopener noreferrer">${topic.link || "No link provided"}</a></p>
-
-          <div class="study-info">
-            <div><span class="label emoji-label">⏳</span> Start: ${formatDate(topic.start)}</div>
-            <div><span class="label emoji-label">⏲️</span> End: ${formatDate(topic.end)}</div>
-            <div><span class="label emoji-label">📝</span> Notes: ${topic.notes || "-"}</div>
-          </div>
-
-          <form class="topic-edit-form" data-index="${index}" aria-label="Edit form for ${topic.topic}">
-            <label>
-              Link to Material: <input type="url" name="link" value="${escapeHtml(topic.link)}" placeholder="https://..."/>
-            </label><br/>
-            <label>
-              Start Date & Time: <input type="datetime-local" name="start" value="${topic.start ? topic.start.substring(0,16) : ''}" />
-            </label><br/>
-            <label>
-              End Date & Time: <input type="datetime-local" name="end" value="${topic.end ? topic.end.substring(0,16) : ''}" />
-            </label><br/>
-            <label>
-              Notes: <textarea name="notes" rows="3" placeholder="Type your notes here">${escapeHtml(topic.notes)}</textarea>
-            </label><br/>
-            <button type="submit" aria-label="Save topic ${topic.topic} details">Save</button>
-          </form>
-        </div>
+  // Render roles to homepage
+  function renderRoles() {
+    roleSelectionEl.innerHTML = "";
+    roles.forEach((role, i) => {
+      const card = document.createElement("div");
+      card.className = "role-card";
+      card.dataset.index = i;
+      card.tabIndex = 0;
+      card.innerHTML = `
+        <div class="role-emoji">${getRoleEmoji(role.title)}</div>
+        <div>${role.title}</div>
+        <button title="Delete role" aria-label="Delete ${role.title}" class="role-delete">&times;</button>
       `;
+      roleSelectionEl.appendChild(card);
 
-      roadmapEl.appendChild(topicDiv);
-    });
+      card.addEventListener("click", e => {
+        // Prevent click if delete pressed
+        if(e.target.classList.contains("role-delete")) return;
+        selectRole(i);
+      });
 
-    // Update progress bar
-    const percent = calculateProgress(roadmapData);
-    progressFill.style.width = `${percent}%`;
-    progressText.textContent = `${percent}% Completed`;
-    progressEmoji.textContent = progressEmojiForPercent(percent);
-
-    // Add event listeners for selects and forms
-    roadmapEl.querySelectorAll("select.status-select").forEach((sel) => {
-      sel.addEventListener("change", onStatusChange);
-    });
-    roadmapEl.querySelectorAll("form.topic-edit-form").forEach((form) => {
-      form.addEventListener("submit", onTopicEditSubmit);
-    });
-  }
-
-  // Escape HTML for security
-  function escapeHtml(text) {
-    if (!text) return "";
-    return text.replace(/[&<>"'`=\/]/g, function (s) {
-      return ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;",
-        "/": "&#x2F;",
-        "`": "&#x60;",
-        "=": "&#x3D;"
-      })[s];
+      card.querySelector(".role-delete").addEventListener("click", e => {
+        e.stopPropagation();
+        if(confirm(`Delete role: "${role.title}"? This will remove all data for this role.`)) {
+          roles.splice(i,1);
+          saveRoles();
+          renderRoles();
+          clearDashboard();
+        }
+      });
     });
   }
 
-  // Status emoji
-  function statusEmoji(status) {
+  // Return role emoji for display
+  function getRoleEmoji(title) {
+    const map = {
+      "DevOps Engineer": "🚀",
+      "Infrastructure Engineer": "💻",
+      "NOC Monitoring / Lead": "🖥️"
+    };
+    return map[title] || "🎯";
+  }
+
+  // Select a role to show dashboard
+  function selectRole(index) {
+    selectedRoleIndex = index;
+    const role = roles[index];
+    roleTitleEl.textContent = role.title + " Roadmap";
+    dashboardEl.style.display = "block";
+    renderProgress(role);
+    renderRoleRoadmap(role);
+    renderSkills(role);
+    roleProgressEl.innerHTML = "";
+    renderRoles();
+    scrollToTop();
+  }
+
+  // Scroll to top helper
+  function scrollToTop() {
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  // Render overall progress for role (outside dashboard)
+  function renderProgress(role) {
+    const totalTopics = role.roadmap.length;
+    if(totalTopics === 0) {
+      roleProgressEl.innerHTML = "";
+      return;
+    }
+    let finishedCount = 0;
+    role.roadmap.forEach(t => { if(t.status === "Finished") finishedCount++; });
+    const percent = Math.round((finishedCount / totalTopics) * 100);
+    roleProgressEl.innerHTML = `
+      <h3>${role.title} Overall Progress</h3>
+      <div id="progress-bar" aria-label="Overall progress bar for ${role.title}">
+        <div id="progress-fill" style="width:${percent}%; background: linear-gradient(90deg, #004aad 0%, #00aaff 100%); height: 25px; border-radius: 15px;"></div>
+      </div>
+      <p id="progress-text" style="font-weight: bold; font-size: 1.25rem; color: #004aad;">${percent}% completed <span>${getEmojiForPercent(percent)}</span></p>
+    `;
+  }
+
+  // Render roadmap main topics
+  function renderRoleRoadmap(role) {
+    topicListEl.innerHTML = "";
+    role.roadmap.forEach((topic, idx) => {
+      const div = document.createElement("div");
+      div.className = "topic-card";
+      div.tabIndex = 0;
+      div.dataset.idx = idx;
+      div.innerHTML = `
+        <div class="topic-title">
+          <span>${topic.topic}</span>
+          <span>${getStatusEmoji(topic.status)}</span>
+        </div>
+        <p style="margin-top:6px; color:#555;">${topic.description}</p>
+      `;
+      topicListEl.appendChild(div);
+
+      // Click on topic to show details
+      div.addEventListener("click", () => {
+        showTopicDetails(idx);
+      });
+      div.addEventListener("keypress", e => {
+        if(e.key === "Enter") showTopicDetails(idx);
+      });
+    });
+  }
+
+  // Render dev and monitoring tools separately
+  function renderSkills(role) {
+    devToolsListEl.innerHTML = "";
+    monitoringToolsListEl.innerHTML = "";
+    if(role.devTools && role.devTools.length) {
+      role.devTools.forEach(tool => {
+        const li = document.createElement("li");
+        li.textContent = tool;
+        devToolsListEl.appendChild(li);
+      });
+    }
+    if(role.monitoringTools && role.monitoringTools.length) {
+      role.monitoringTools.forEach(tool => {
+        const li = document.createElement("li");
+        li.textContent = tool;
+        monitoringToolsListEl.appendChild(li);
+      });
+    }
+  }
+
+  // Status emoji helper
+  function getStatusEmoji(status) {
     switch(status) {
       case "Pending": return "⏳";
       case "In Progress": return "🔄";
@@ -520,168 +618,182 @@
     }
   }
 
-  // Handle status select change
-  function onStatusChange(e) {
-    const index = e.target.getAttribute("data-index");
-    roadmapData[index].status = e.target.value;
-    saveRoadmap(selectedRole, roadmapData);
-    renderRoadmap();
+  // Show topic details page
+  function showTopicDetails(topicIndex) {
+    selectedTopicId = topicIndex;
+    dashboardEl.style.display = "none";
+    topicDetailsEl.style.display = "block";
+
+    const role = roles[selectedRoleIndex];
+    const topic = role.roadmap[topicIndex];
+
+    topicDetailsTitleEl.textContent = topic.topic;
+    topicDescEl.value = topic.description;
+
+    // Show progress of subtopics (percentage finished)
+    const totalSub = topic.subtopics.length;
+    let finishedSub = 0;
+    topic.subtopics.forEach(st => { if(st.status === "Finished") finishedSub++; });
+    const percent = totalSub === 0 ? 0 : Math.round((finishedSub / totalSub) * 100);
+    topicProgressEl.textContent = percent;
+    topicProgressEmojiEl.textContent = getEmojiForPercent(percent);
+
+    renderSubtopics(topic.subtopics || []);
+    
+    scrollToTop();
   }
 
-  // Handle topic edit form submit
-  function onTopicEditSubmit(e) {
-    e.preventDefault();
-    const index = e.target.getAttribute("data-index");
-    const formData = new FormData(e.target);
-    const topic = roadmapData[index];
-
-    topic.link = formData.get("link").trim();
-    topic.start = formData.get("start");
-    topic.end = formData.get("end");
-    topic.notes = formData.get("notes").trim();
-
-    saveRoadmap(selectedRole, roadmapData);
-    renderRoadmap();
-  }
-
-  // Render Certifications list
-  function renderCertifications() {
-    const certs = loadCertifications();
-    certList.innerHTML = "";
-    if (certs.length === 0) {
-      certList.innerHTML = "<p>No certifications added yet.</p>";
+  // Render subtopics for selected topic
+  function renderSubtopics(subtopics) {
+    subtopicListEl.innerHTML = "";
+    if(!subtopics.length) {
+      subtopicListEl.innerHTML = "<p>No subtopics added yet.</p>";
       return;
     }
-    certs.forEach((cert, index) => {
+    subtopics.forEach((sub, i) => {
       const div = document.createElement("div");
-      div.className = "item";
+      div.className = "subtopic-card";
+      div.tabIndex = 0;
+      div.dataset.subidx = i;
       div.innerHTML = `
-        <div class="item-details"><strong>${escapeHtml(cert.name)}</strong> - Completed on: ${cert.date}</div>
-        <div class="item-actions">
-          <button aria-label="Delete certification ${cert.name}" data-index="${index}">Delete</button>
+        <div class="subtopic-title">${sub.title}
+          <span class="subtopic-status status-${sub.status.toLowerCase().replace(" ","")}">${getStatusEmoji(sub.status)}</span>
         </div>
+        <p style="margin-top:5px; color:#555">${sub.notes || "(No notes)"}</p>
+        <p><a href="${sub.link || '#'}" target="_blank" rel="noreferrer noopener">${sub.link || "(No link)"}</a></p>
       `;
-      certList.appendChild(div);
-    });
-    certList.querySelectorAll("button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const idx = btn.getAttribute("data-index");
-        deleteCertification(idx);
+      subtopicListEl.appendChild(div);
+
+      div.addEventListener("click", () => {
+        showSubtopicEditor(i);
+      });
+      div.addEventListener("keypress", e => {
+        if(e.key === "Enter") showSubtopicEditor(i);
       });
     });
   }
 
-  // Delete certification
-  function deleteCertification(idx) {
-    const certs = loadCertifications();
-    certs.splice(idx, 1);
-    saveCertifications(certs);
-    renderCertifications();
+  // Show subtopic editor modal (simple overlay)
+  function showSubtopicEditor(subIdx) {
+    const role = roles[selectedRoleIndex];
+    const topic = role.roadmap[selectedTopicId];
+    const sub = topic.subtopics[subIdx];
+
+    let modal = document.createElement("div");
+    modal.setAttribute("role","dialog");
+    modal.style.position = "fixed";
+    modal.style.top = "0"; modal.style.left = "0";
+    modal.style.width = "100vw"; modal.style.height = "100vh";
+    modal.style.background = "rgba(0,0,0,0.6)";
+    modal.style.display = "flex";
+    modal.style.justifyContent = "center";
+    modal.style.alignItems = "center";
+    modal.style.zIndex = 9999;
+
+    modal.innerHTML = `
+      <div style="background:#fff; border-radius:12px; padding:20px; max-width: 480px; width: 90%;">
+        <h3>Edit Subtopic: ${sub.title}</h3>
+        <label>Status:
+          <select id="edit-sub-status" style="width:100%; margin-top:5px; margin-bottom:15px;">
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Finished">Finished</option>
+          </select>
+        </label>
+        <label>Notes:
+          <textarea id="edit-sub-notes" rows="4" style="width:100%; margin-top:5px; margin-bottom:15px;"></textarea>
+        </label>
+        <label>Learning Link:
+          <input type="url" id="edit-sub-link" style="width:100%; margin-bottom:15px;" placeholder="https://example.com"/>
+        </label>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button id="subtopic-save-btn" style="background:#004aad; color:#fff; padding:8px 14px; border:none; border-radius:6px; cursor:pointer;">Save</button>
+          <button id="subtopic-cancel-btn" style="background:#bbb; color:#333; padding:8px 14px; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Set current values
+    document.getElementById("edit-sub-status").value = sub.status;
+    document.getElementById("edit-sub-notes").value = sub.notes || "";
+    document.getElementById("edit-sub-link").value = sub.link || "";
+
+    function closeModal() {
+      modal.remove();
+    }
+
+    document.getElementById("subtopic-save-btn").onclick = () => {
+      sub.status = document.getElementById("edit-sub-status").value;
+      sub.notes = document.getElementById("edit-sub-notes").value.trim();
+      sub.link = document.getElementById("edit-sub-link").value.trim();
+      saveRoles();
+      renderSubtopics(topic.subtopics);
+      closeModal();
+    };
+    document.getElementById("subtopic-cancel-btn").onclick = closeModal;
   }
 
-  // Render Skills list
-  function renderSkills() {
-    const skills = loadSkills();
-    skillList.innerHTML = "";
-    if (skills.length === 0) {
-      skillList.innerHTML = "<p>No skills or achievements added yet.</p>";
+  // Back from topic details to dashboard
+  backToMainBtn.onclick = () => {
+    topicDetailsEl.style.display = "none";
+    dashboardEl.style.display = "block";
+    scrollToTop();
+  };
+
+  // Save changes for topic description
+  saveTopicDetailsBtn.onclick = () => {
+    const role = roles[selectedRoleIndex];
+    const topic = role.roadmap[selectedTopicId];
+    topic.description = topicDescEl.value.trim();
+    saveRoles();
+    renderRoleRoadmap(role);
+    alert("Topic description saved!");
+  };
+
+  // Back to roles list from dashboard
+  backToRolesBtn.onclick = () => {
+    dashboardEl.style.display = "none";
+    roleProgressEl.innerHTML = "";
+    selectedRoleIndex = null;
+    selectedTopicId = null;
+    renderRoles();
+    scrollToTop();
+  };
+
+  // Add new role handler
+  addRoleForm.addEventListener("submit", (e)=>{
+    e.preventDefault();
+    let title = newRoleInput.value.trim();
+    if(!title) {
+      alert("Please enter a role title");
       return;
     }
-    skills.forEach((skill, index) => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <div class="item-details">${escapeHtml(skill)}</div>
-        <div class="item-actions">
-          <button aria-label="Delete skill ${skill}" data-index="${index}">Delete</button>
-        </div>
-      `;
-      skillList.appendChild(div);
-    });
-    skillList.querySelectorAll("button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const idx = btn.getAttribute("data-index");
-        deleteSkill(idx);
-      });
-    });
-  }
-
-  // Delete skill
-  function deleteSkill(idx) {
-    const skills = loadSkills();
-    skills.splice(idx, 1);
-    saveSkills(skills);
-    renderSkills();
-  }
-
-  // Event on role card click
-  document.querySelectorAll(".role-card").forEach(card => {
-    card.addEventListener("click", () => {
-      selectedRole = card.getAttribute("data-role");
-      roleTitleEl.textContent = `${selectedRole} Roadmap & Progress`;
-      roleSelectionScreen.style.display = "none";
-      dashboard.style.display = "block";
-
-      roadmapData = loadRoadmap(selectedRole);
-      renderRoadmap();
-
-      renderCertifications();
-      renderSkills();
-
-      localStorage.setItem(STORAGE_KEYS.SELECTED_ROLE, selectedRole);
-    });
-  });
-
-  // Back to role selection
-  backToRolesBtn.addEventListener("click", () => {
-    dashboard.style.display = "none";
-    roleSelectionScreen.style.display = "block";
-    selectedRole = null;
-    localStorage.removeItem(STORAGE_KEYS.SELECTED_ROLE);
-  });
-
-  // On page load, check saved role
-  window.addEventListener("load", () => {
-    const savedRole = localStorage.getItem(STORAGE_KEYS.SELECTED_ROLE);
-    if (savedRole && roadmapsTemplate[savedRole]) {
-      selectedRole = savedRole;
-      roleTitleEl.textContent = `${selectedRole} Roadmap & Progress`;
-      roleSelectionScreen.style.display = "none";
-      dashboard.style.display = "block";
-      roadmapData = loadRoadmap(selectedRole);
-      renderRoadmap();
-
-      renderCertifications();
-      renderSkills();
+    // Prevent duplicate titles
+    if(roles.some(r=>r.title.toLowerCase()===title.toLowerCase())) {
+      alert("Role title already exists.");
+      return;
     }
+
+    roles.push({
+      title: title,
+      roadmap: [],
+      devTools: [],
+      monitoringTools: []
+    });
+    saveRoles();
+    renderRoles();
+    newRoleInput.value = "";
   });
 
-  // Certification form submit
-  certForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const nameInput = document.getElementById("cert-name");
-    const dateInput = document.getElementById("cert-date");
-
-    const certs = loadCertifications();
-    certs.push({ name: nameInput.value.trim(), date: dateInput.value });
-    saveCertifications(certs);
-
-    nameInput.value = "";
-    dateInput.value = "";
-    renderCertifications();
-  });
-
-  // Skills form submit
-  skillForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const skillInput = document.getElementById("skill-name");
-    const skills = loadSkills();
-    skills.push(skillInput.value.trim());
-    saveSkills(skills);
-
-    skillInput.value = "";
-    renderSkills();
-  });
+  // On load
+  window.onload = () => {
+    loadRoles();
+    renderRoles();
+  };
 </script>
+
+
 </body>
 </html>
