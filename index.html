@@ -3,33 +3,33 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Study Tracker - Login & Signup</title>
+<title>Study Tracker - Admin & User Role Management</title>
 <style>
   body {
-    font-family: Arial, sans-serif; background: #f5f7fa; margin:0; min-height:100vh; display: flex; justify-content: center; align-items: center;
+    font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
   }
   .container {
     background: white;
     padding: 25px 30px;
     border-radius: 12px;
     box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    max-width: 400px;
+    max-width: 600px;
     width: 100%;
-    text-align: center;
   }
   h2 {
     color: #004aad;
+    margin-top: 0;
   }
-  input[type=text], input[type=password] {
+  input[type=text], input[type=password], textarea {
     width: 100%;
     padding: 10px 12px;
-    margin: 10px 0;
+    margin: 6px 0 14px;
     border-radius: 8px;
     border: 1px solid #ccc;
     font-size: 16px;
+    resize: vertical;
   }
   button {
-    width: 100%;
     background: #004aad;
     color: white;
     border: none;
@@ -38,6 +38,8 @@
     font-size: 16px;
     border-radius: 8px;
     cursor: pointer;
+    margin-top: 8px;
+    width: 100%;
   }
   button:hover {
     background: #00337f;
@@ -48,28 +50,82 @@
     cursor: pointer;
     text-decoration: underline;
   }
-  #logout-btn, #delete-account-btn {
-    margin: 10px 0 0 0;
+  #logout-btn, #delete-account-btn, #admin-logout-btn {
     background: #e53935;
+    width: auto;
+    padding: 8px 16px;
+    margin: 10px 4px 0 0;
   }
-  #logout-btn:hover, #delete-account-btn:hover {
+  #logout-btn:hover, #delete-account-btn:hover, #admin-logout-btn:hover {
     background: #ab000d;
   }
-  #welcome-msg {
+  #welcome-msg, #admin-welcome-msg {
     font-weight: 600;
     margin-bottom: 20px;
     color: #333;
   }
-  #role-selection {
-    margin-top: 20px;
-    text-align: left;
+  .hidden {
+    display: none !important;
   }
-  #role-selection h3 {
-    color: #004aad;
-    margin-bottom: 10px;
+  /* Autocomplete styling */
+  .autocomplete-items {
+    position: absolute;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    border-top: none;
+    z-index: 99;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background:white;
   }
-  #role-selection p {
-    color: #555;
+  .autocomplete-items div {
+    padding: 10px;
+    cursor: pointer;
+  }
+  .autocomplete-items div:hover {
+    background-color: #e9e9e9;
+  }
+  .role-item {
+    border-bottom: 1px solid #ddd;
+    padding: 8px 4px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+  }
+  .role-item:last-child {
+    border-bottom: none;
+  }
+  .role-add-btn {
+    background: #004aad;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .role-add-btn:hover {
+    background: #00337f;
+  }
+  .personal-role {
+    background: #f0f8ff;
+    padding: 8px 10px;
+    margin: 6px 0;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .remove-btn {
+    background: #e53935;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-weight: 900;
+    cursor: pointer;
   }
 </style>
 </head>
@@ -83,40 +139,104 @@
   <div class="switch-auth" id="toggle-auth">Don't have an account? Sign up</div>
 </div>
 
-<div class="container" id="app-container" style="display:none;">
+<div class="container hidden" id="user-container">
   <div id="welcome-msg"></div>
   <button id="logout-btn">Logout</button>
   <button id="delete-account-btn">Delete Account</button>
 
-  <div id="role-selection">
-    <h3>Role Selection</h3>
-    <p>This section will show your roles and allow selection after next steps.</p>
+  <h3>Add Roles to Your Learning List</h3>
+  <div style="position: relative;">
+    <input type="text" id="role-search" placeholder="Search roles..." autocomplete="off" />
+    <div id="autocomplete-list" class="autocomplete-items"></div>
   </div>
+
+  <h3>Your Roles</h3>
+  <div id="personal-role-list"><p>No roles added yet.</p></div>
+</div>
+
+<div class="container hidden" id="admin-container">
+  <div id="admin-welcome-msg"></div>
+  <button id="admin-logout-btn">Logout</button>
+
+  <h3>Master Role Management</h3>
+  <div id="master-roles-list"></div>
+
+  <h4>Add New Master Role</h4>
+  <input type="text" id="new-role-title" placeholder="Role title" />
+  <textarea id="new-role-desc" placeholder="Role description"></textarea>
+  <button id="add-master-role-btn">Add Role</button>
 </div>
 
 <script>
-  // Predefine admin user (username: admin, password: Admin@123)
-  const predefinedUsers = {
-    admin: { password: hashPassword("Admin@123"), data: { roles: [] } }
-  };
+  // Predefined admin user credentials
+  const ADMIN_USERNAME = "admin";
+  const ADMIN_PASSWORD_HASH = hashPassword("Admin@123");
 
-  // Load or initialize users in localStorage
+  // Load users and ensure admin user is present with correct password hash (fixed loadUsers function)
   function loadUsers() {
     let stored = localStorage.getItem("users");
-    if(!stored) {
-      localStorage.setItem("users", JSON.stringify(predefinedUsers));
-      return {...predefinedUsers};
+    let users;
+    if (!stored) {
+      // No users saved yet, initialize with admin
+      users = {
+        [ADMIN_USERNAME]: { password: ADMIN_PASSWORD_HASH, data: { roles: [] } }
+      };
+      localStorage.setItem("users", JSON.stringify(users));
+    } else {
+      users = JSON.parse(stored);
+      // Add or update admin user to ensure correct password
+      if (!users[ADMIN_USERNAME] || users[ADMIN_USERNAME].password !== ADMIN_PASSWORD_HASH) {
+        users[ADMIN_USERNAME] = { password: ADMIN_PASSWORD_HASH, data: { roles: [] } };
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+    }
+    return users;
+  }
+
+  function loadMasterRoles() {
+    let stored = localStorage.getItem("masterRoles");
+    if (!stored) {
+      const initialMasterRoles = [
+        { id: "devops", title: "DevOps Engineer", description: "Role covering Azure, AWS, Terraform, Docker, Kubernetes, CI/CD, Monitoring and more."},
+        { id: "infrastructure", title: "Infrastructure Engineer", description: "Server, virtualization, cloud infrastructure, networking, backup and automation."},
+        { id: "noc", title: "Network Operations Center Engineer", description: "Monitoring via CloudWatch, SolarWinds, incident handling and escalation."}
+      ];
+      localStorage.setItem("masterRoles", JSON.stringify(initialMasterRoles));
+      return initialMasterRoles;
     }
     return JSON.parse(stored);
   }
 
+  function saveUsers(users) {
+    localStorage.setItem("users", JSON.stringify(users));
+  }
+
+  function saveMasterRoles(masterRoles) {
+    localStorage.setItem("masterRoles", JSON.stringify(masterRoles));
+  }
+
+  function hashPassword(str) {
+    let hash = 0, i, chr;
+    if (str.length ===0) return hash.toString();
+    for(i=0;i<str.length;i++){
+      chr = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |=0;
+    }
+    return hash.toString();
+  }
+
+  // App State
   let users = loadUsers();
+  let masterRoles = loadMasterRoles();
   let currentUser = null;
+  let isLogin = true;
 
+  // DOM Elements
   const authContainer = document.getElementById("auth-container");
-  const appContainer = document.getElementById("app-container");
+  const userContainer = document.getElementById("user-container");
+  const adminContainer = document.getElementById("admin-container");
 
-  const formTitle = document.getElementById("form-title");
   const usernameInput = document.getElementById("username");
   const passwordInput = document.getElementById("password");
   const submitBtn = document.getElementById("submit-btn");
@@ -126,21 +246,21 @@
   const logoutBtn = document.getElementById("logout-btn");
   const deleteAccountBtn = document.getElementById("delete-account-btn");
 
-  let isLogin = true; // toggle between login/signup
+  const adminWelcomeMsg = document.getElementById("admin-welcome-msg");
+  const adminLogoutBtn = document.getElementById("admin-logout-btn");
 
-  // Simple hash function (NOT SECURE, just for demo)
-  function hashPassword(str) {
-    let hash = 0, i, chr;
-    if (str.length === 0) return hash.toString();
-    for (i = 0; i < str.length; i++) {
-      chr = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + chr;
-      hash |= 0; // Convert to 32bit integer
-    }
-    return hash.toString();
-  }
+  const roleSearchInput = document.getElementById("role-search");
+  const autocompleteList = document.getElementById("autocomplete-list");
+  const personalRoleList = document.getElementById("personal-role-list");
 
-  // Switch between login and signup UI
+  const masterRolesList = document.getElementById("master-roles-list");
+  const newRoleTitleInput = document.getElementById("new-role-title");
+  const newRoleDescInput = document.getElementById("new-role-desc");
+  const addMasterRoleBtn = document.getElementById("add-master-role-btn");
+
+  const formTitle = document.getElementById("form-title");
+
+  // Toggle login/signup UI
   toggleAuth.addEventListener("click", () => {
     isLogin = !isLogin;
     formTitle.textContent = isLogin ? "Login" : "Sign Up";
@@ -150,34 +270,30 @@
     passwordInput.value = "";
   });
 
-  // Handle login/signup button click
+  // Submit login or signup
   submitBtn.addEventListener("click", () => {
     const username = usernameInput.value.trim();
     const password = passwordInput.value.trim();
-
-    if(!username || !password){
-      alert("Please enter username and password.");
+    if (!username || !password) {
+      alert("Enter username and password");
       return;
     }
-
-    if (isLogin){
-      // Login flow
-      if(users[username] && users[username].password === hashPassword(password)){
+    if (isLogin) {
+      if (users[username] && users[username].password === hashPassword(password)) {
         currentUser = username;
         sessionStorage.setItem("currentUser", currentUser);
-        showApp();
+        showAppropriateDashboard();
       } else {
-        alert("Invalid username or password.");
+        alert("Invalid username or password");
       }
     } else {
-      // Signup flow
-      if(users[username]){
-        alert("Username already exists. Choose another.");
+      if (users[username]) {
+        alert("Username already exists");
         return;
       }
-      users[username] = {password: hashPassword(password), data: {roles: []}};
-      localStorage.setItem("users", JSON.stringify(users));
-      alert("Account created! You can now login.");
+      users[username] = { password: hashPassword(password), data: { roles: [] } };
+      saveUsers(users);
+      alert("User created! Please login.");
       isLogin = true;
       formTitle.textContent = "Login";
       submitBtn.textContent = "Login";
@@ -187,41 +303,207 @@
     }
   });
 
-  // Show main app after login
-  function showApp() {
-    authContainer.style.display = "none";
-    appContainer.style.display = "block";
-    welcomeMsg.textContent = "Welcome, " + currentUser + "!";
+  // Show user or admin dashboard after login
+  function showAppropriateDashboard() {
+    authContainer.classList.add("hidden");
+    if (currentUser === "admin") {
+      showAdminDashboard();
+    } else {
+      showUserDashboard();
+    }
   }
 
-  // Logout action
+  // Show admin dashboard
+  function showAdminDashboard() {
+    userContainer.classList.add("hidden");
+    adminContainer.classList.remove("hidden");
+    adminWelcomeMsg.textContent = `Welcome, Admin!`;
+    renderMasterRoles();
+  }
+
+  // Show user dashboard
+  function showUserDashboard() {
+    adminContainer.classList.add("hidden");
+    userContainer.classList.remove("hidden");
+    welcomeMsg.textContent = `Welcome, ${currentUser}!`;
+    roleSearchInput.value = "";
+    renderPersonalRoles();
+    autocompleteList.innerHTML = "";
+  }
+
+  // Logout handlers
   logoutBtn.addEventListener("click", () => {
     currentUser = null;
     sessionStorage.removeItem("currentUser");
-    authContainer.style.display = "block";
-    appContainer.style.display = "none";
+    userContainer.classList.add("hidden");
+    authContainer.classList.remove("hidden");
+    usernameInput.value = "";
+    passwordInput.value = "";
+  });
+  adminLogoutBtn.addEventListener("click", () => {
+    currentUser = null;
+    sessionStorage.removeItem("currentUser");
+    adminContainer.classList.add("hidden");
+    authContainer.classList.remove("hidden");
     usernameInput.value = "";
     passwordInput.value = "";
   });
 
-  // Delete account action with confirmation
+  // Delete account for regular user
   deleteAccountBtn.addEventListener("click", () => {
-    if(confirm("Are you sure you want to delete your account? This action cannot be undone.")){
-      if(users[currentUser]){
-        delete users[currentUser];
-        localStorage.setItem("users", JSON.stringify(users));
-        logoutBtn.click();
-        alert("Your account has been deleted.");
-      }
+    if (confirm("Delete your account? This cannot be undone.")) {
+      delete users[currentUser];
+      saveUsers(users);
+      logoutBtn.click();
+      alert("Account deleted");
     }
   });
 
-  // On page load, check session
+  // Render master roles in admin dashboard
+  function renderMasterRoles() {
+    masterRolesList.innerHTML = "";
+    masterRoles.forEach((role, idx) => {
+      const div = document.createElement("div");
+      div.style.border = "1px solid #ddd";
+      div.style.padding = "10px";
+      div.style.marginBottom = "10px";
+      div.style.borderRadius = "8px";
+
+      const title = document.createElement("h4");
+      title.textContent = role.title;
+      div.appendChild(title);
+
+      const desc = document.createElement("p");
+      desc.textContent = role.description || "";
+      div.appendChild(desc);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete Role";
+      deleteBtn.style.background = "#e53935";
+      deleteBtn.style.color = "white";
+      deleteBtn.style.border = "none";
+      deleteBtn.style.padding = "6px 12px";
+      deleteBtn.style.borderRadius = "6px";
+      deleteBtn.style.cursor = "pointer";
+
+      deleteBtn.addEventListener("click", () => {
+        if (confirm(`Delete master role: ${role.title}?`)) {
+          masterRoles.splice(idx, 1);
+          saveMasterRoles(masterRoles);
+          renderMasterRoles();
+        }
+      });
+
+      div.appendChild(deleteBtn);
+
+      masterRolesList.appendChild(div);
+    });
+  }
+
+  // Admin add new master role
+  addMasterRoleBtn.addEventListener("click", () => {
+    const title = newRoleTitleInput.value.trim();
+    const desc = newRoleDescInput.value.trim();
+    if (!title) {
+      alert("Role title is required");
+      return;
+    }
+    if (masterRoles.some(r => r.title.toLowerCase() === title.toLowerCase())) {
+      alert("Role already exists");
+      return;
+    }
+    masterRoles.push({ id: `role-${Date.now()}`, title, description: desc });
+    saveMasterRoles(masterRoles);
+    newRoleTitleInput.value = "";
+    newRoleDescInput.value = "";
+    renderMasterRoles();
+  });
+
+  // User: Role search autocomplete UI
+  roleSearchInput.addEventListener("input", () => {
+    const val = roleSearchInput.value.trim().toLowerCase();
+    autocompleteList.innerHTML = "";
+    if (!val) return;
+
+    const filtered = masterRoles.filter(r => r.title.toLowerCase().includes(val));
+    filtered.forEach(role => {
+      const item = document.createElement("div");
+      item.className = "role-item";
+      item.textContent = role.title;
+
+      const addBtn = document.createElement("button");
+      addBtn.textContent = "Add";
+      addBtn.className = "role-add-btn";
+      addBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addRoleToUser(role);
+      });
+
+      item.appendChild(addBtn);
+      autocompleteList.appendChild(item);
+
+      item.addEventListener("click", () => {
+        roleSearchInput.value = role.title;
+        autocompleteList.innerHTML = "";
+      });
+    });
+  });
+
+  // Add role to user personal roles
+  function addRoleToUser(role) {
+    const userData = users[currentUser].data;
+    userData.roles = userData.roles || [];
+    if (userData.roles.some(r => r.title === role.title)) {
+      alert("Role already added");
+      return;
+    }
+    // Add role with empty roadmap to personal list for now
+    userData.roles.push({ title: role.title, description: role.description || "", roadmap: [] });
+    saveUsers(users);
+    alert(`Role "${role.title}" added to your list!`);
+    renderPersonalRoles();
+    roleSearchInput.value = "";
+    autocompleteList.innerHTML = "";
+  }
+
+  // Render personal roles list for user
+  function renderPersonalRoles() {
+    const userData = users[currentUser].data;
+    const roles = userData.roles || [];
+    personalRoleList.innerHTML = "";
+    if (roles.length === 0) {
+      personalRoleList.innerHTML = "<p>No roles added yet. Use the search box above to add roles.</p>";
+      return;
+    }
+    roles.forEach((role, i) => {
+      const div = document.createElement("div");
+      div.className = "personal-role";
+      div.textContent = role.title;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "remove-btn";
+      removeBtn.title = `Remove ${role.title}`;
+      removeBtn.textContent = "×";
+
+      removeBtn.addEventListener("click", () => {
+        if (confirm(`Remove role: ${role.title}?`)) {
+          roles.splice(i, 1);
+          saveUsers(users);
+          renderPersonalRoles();
+        }
+      });
+
+      div.appendChild(removeBtn);
+      personalRoleList.appendChild(div);
+    });
+  }
+
+  // On page load, check session and show proper UI
   window.onload = () => {
     const savedUser = sessionStorage.getItem("currentUser");
-    if(savedUser && users[savedUser]){
+    if(savedUser && users[savedUser]) {
       currentUser = savedUser;
-      showApp();
+      showAppropriateDashboard();
     }
   };
 </script>
