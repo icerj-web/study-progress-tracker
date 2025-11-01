@@ -3,15 +3,87 @@
 <head>
   <title>Study Progress Tracker</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #topicList { margin-top: 20px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f0f8ff;
+      color: #333;
+    }
+    h1 {
+      color: #004aad;
+      text-align: center;
+    }
+    form {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 8px rgba(0, 74, 173, 0.2);
+    }
+    input, button, textarea {
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #004aad;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background: #004aad;
+      color: white;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background: #002f6c;
+    }
+    #topicList {
+      max-width: 700px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 12px rgba(0, 74, 173, 0.15);
+    }
+    .entry {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .entry:last-child {
+      border-bottom: none;
+    }
+    .label {
+      font-weight: bold;
+      color: #004aad;
+    }
+    .small-text {
+      color: #777;
+      font-size: 0.9em;
+      margin-top: 4px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>Study Progress Tracker</h1>
   <form id="studyForm">
     <input type="text" id="topic" placeholder="Topic name" required>
-    <input type="number" id="hours" placeholder="Hours studied" min="0" step="0.1" required>
+    
+    <label for="startDateTime" class="label">Study Start Date & Time</label>
+    <input type="datetime-local" id="startDateTime" required>
+    
+    <label for="endDateTime" class="label">Study End Date & Time</label>
+    <input type="datetime-local" id="endDateTime" required>
+
+    <textarea id="description" placeholder="Description (what you covered)" rows="3" required></textarea>
+
+    <input type="text" id="tools" placeholder="Tools/Platforms used (e.g. VS Code, Azure)" required>
+
+    <input type="text" id="source" placeholder="Where you learned (e.g. YouTube, Udemy)" required>
+
     <button type="submit">Add Study Entry</button>
   </form>
 
@@ -30,15 +102,40 @@
         return;
       }
       studies.forEach(study => {
-        topicList.innerHTML += `<p><strong>${study.topic}</strong> - ${study.hours} hours</p>`;
+        topicList.innerHTML += `
+          <div class="entry">
+            <div><span class="label">Topic:</span> ${study.topic}</div>
+            <div><span class="label">Start:</span> ${new Date(study.startDateTime).toLocaleString()}</div>
+            <div><span class="label">End:</span> ${new Date(study.endDateTime).toLocaleString()}</div>
+            <div><span class="label">Duration:</span> ${study.duration} hours</div>
+            <div><span class="label">Description:</span> ${study.description}</div>
+            <div><span class="label">Tools/Platforms:</span> ${study.tools}</div>
+            <div><span class="label">Source:</span> ${study.source}</div>
+          </div>`;
       });
     }
 
     form.addEventListener('submit', e => {
       e.preventDefault();
+      
       const topic = document.getElementById('topic').value.trim();
-      const hours = parseFloat(document.getElementById('hours').value);
-      studies.push({ topic, hours });
+      const startDateTime = document.getElementById('startDateTime').value;
+      const endDateTime = document.getElementById('endDateTime').value;
+      const description = document.getElementById('description').value.trim();
+      const tools = document.getElementById('tools').value.trim();
+      const source = document.getElementById('source').value.trim();
+
+      // Calculate duration in hours to one decimal place
+      const start = new Date(startDateTime);
+      const end = new Date(endDateTime);
+      const diffMs = end - start;
+      if (diffMs <= 0) {
+        alert('End date/time must be after start date/time.');
+        return;
+      }
+      const duration = (diffMs / (1000 * 60 * 60)).toFixed(1);
+
+      studies.push({ topic, startDateTime, endDateTime, duration, description, tools, source });
       localStorage.setItem('studies', JSON.stringify(studies));
       form.reset();
       render();
