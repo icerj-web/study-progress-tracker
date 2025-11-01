@@ -8,13 +8,116 @@
 </head>
 <body>
 
-<div id="auth-container"> <!-- login/signup markup here --></div>
-<div id="user-container" class="hidden"> <!-- user dashboard markup --></div>
-<div id="admin-container" class="hidden"> <!-- admin dashboard markup --></div>
-<div id="role-details-container" class="hidden"> <!-- role details markup --></div>
-<div id="topic-editor-container" class="hidden"> <!-- admin topic editor markup --></div>
-<div id="subtopic-editor-container" class="hidden"> <!-- admin subtopic editor markup --></div>
-<div id="study-session-container" class="hidden"> <!-- study session UI --></div>
+<!-- Authentication UI -->
+<div class="container" id="auth-container">
+  <h2 id="form-title">Login</h2>
+  <input type="text" id="username" placeholder="Username" autocomplete="username" />
+  <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+  <button id="submit-btn">Login</button>
+  <div class="switch-auth" id="toggle-auth">Don't have an account? Sign up</div>
+</div>
+
+<!-- User Dashboard -->
+<div class="container hidden" id="user-container">
+  <div id="welcome-msg"></div>
+  <button id="logout-btn">Logout</button>
+  <button id="delete-account-btn">Delete Account</button>
+
+  <h3>Add Roles to Your Learning List</h3>
+  <div style="position: relative;">
+    <input type="text" id="role-search" placeholder="Search roles..." autocomplete="off" />
+    <div id="autocomplete-list" class="autocomplete-items"></div>
+  </div>
+
+  <h3>Your Roles</h3>
+  <div id="personal-role-list"><p>No roles added yet.</p></div>
+</div>
+
+<!-- Admin Dashboard -->
+<div class="container hidden" id="admin-container">
+  <div id="admin-welcome-msg"></div>
+  <button id="admin-logout-btn">Logout</button>
+
+  <h3>User Management</h3>
+  <div id="admin-user-list"></div>
+
+  <h3>Master Role Management</h3>
+  <div id="master-roles-list"></div>
+
+  <h4>Add New Master Role</h4>
+  <input type="text" id="new-role-title" placeholder="Role title" />
+  <textarea id="new-role-desc" placeholder="Role description"></textarea>
+  <button id="add-master-role-btn">Add Role</button>
+</div>
+
+<!-- Role Details -->
+<div class="container hidden" id="role-details-container">
+  <button id="back-to-roles-btn">← Back to Roles</button>
+  <h3 id="role-detail-title"></h3>
+  <p id="role-detail-desc"></p>
+
+  <h4>Topics</h4>
+  <ul id="role-topics-list" class="topic-list"></ul>
+
+  <div class="progress-bar" aria-label="Overall Role Progress">
+    <div class="progress-fill" id="role-progress-bar"></div>
+  </div>
+  <small id="role-progress-percent"></small>
+</div>
+
+<!-- Topic Editor (Admin) -->
+<div class="container hidden" id="topic-editor-container">
+  <button id="back-to-topics-btn">← Back to Roles</button>
+  <h3>Edit Topics for <span id="topic-role-title"></span></h3>
+
+  <ul id="admin-topic-list"></ul>
+
+  <h4>Add New Topic</h4>
+  <input type="text" id="new-topic-title" placeholder="Topic title" />
+  <select id="new-topic-status" style="width:100%; margin-bottom:12px;">
+    <option value="Pending">Pending</option>
+    <option value="In Progress">In Progress</option>
+    <option value="Finished">Finished</option>
+  </select>
+  <input type="date" id="new-topic-deadline" placeholder="Deadline" />
+  <textarea id="new-topic-desc" placeholder="Topic description (optional)"></textarea>
+  <button id="add-topic-btn">Add Topic</button>
+</div>
+
+<!-- Subtopic Editor (Admin) -->
+<div class="container hidden" id="subtopic-editor-container">
+  <button id="back-to-subtopics-btn">← Back to Topics</button>
+  <h3>Edit Subtopics for <span id="subtopic-topic-title"></span></h3>
+
+  <ul id="admin-subtopic-list"></ul>
+
+  <h4>Add New Subtopic</h4>
+  <input type="text" id="new-subtopic-title" placeholder="Subtopic title" />
+  <select id="new-subtopic-status" style="width:100%; margin-bottom:12px;">
+    <option value="Pending">Pending</option>
+    <option value="In Progress">In Progress</option>
+    <option value="Finished">Finished</option>
+  </select>
+  <input type="date" id="new-subtopic-deadline" placeholder="Deadline" />
+  <textarea id="new-subtopic-desc" placeholder="Subtopic description (optional)"></textarea>
+  <button id="add-subtopic-btn">Add Subtopic</button>
+</div>
+
+<!-- Study Session Logger (User) -->
+<div class="container hidden" id="study-session-container">
+  <button id="back-to-subtopics-from-session-btn">← Back to Subtopics</button>
+  <h3>Study Sessions for <span id="session-subtopic-title"></span></h3>
+
+  <ul id="user-study-sessions-list"></ul>
+
+  <h4>Add Study Session</h4>
+  <label>Start Date & Time:</label>
+  <input type="datetime-local" id="session-start"/>
+  <label>End Date & Time:</label>
+  <input type="datetime-local" id="session-end"/>
+  <textarea id="session-notes" placeholder="Session notes"></textarea>
+  <button id="add-session-btn">Add Session</button>
+</div>
 
 <script src="utils.js"></script>
 <script src="auth.js"></script>
