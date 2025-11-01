@@ -1,799 +1,337 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Professional Study Tracker - Vaishnavi Radhrishnan</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Study Tracker with Local User Auth</title>
 <style>
-  * { box-sizing: border-box;}
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0; background: #f5f7fa; color: #333; min-height: 100vh;
-    display: flex; flex-direction: column;
+    font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh;
   }
   .container {
-    max-width: 1150px;
-    margin: auto;
-    padding: 1rem;
-    flex: 1 0 auto;
+    background: white; padding: 20px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); max-width: 400px; width: 100%;
   }
-  h1, h2, h3, h4 {
-    margin: 0.3rem 0;
-    font-weight: 700;
+  h2 {
+    color: #004aad; margin-bottom: 16px;
+  }
+  input[type=text], input[type=password] {
+    width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 16px;
+  }
+  button {
+    background: #004aad; color: white; border: none; padding: 12px 20px; width: 100%; cursor: pointer; border-radius: 6px; font-weight: 700; font-size: 16px;
+  }
+  button:hover {
+    background: #00337f;
+  }
+  .switch {
+    margin-top: 12px;
+    font-size: 14px;
+    cursor: pointer;
     color: #004aad;
-  }
-  a {
-    color: #0066cc;
-    text-decoration: none;
-  }
-  a:hover {
     text-decoration: underline;
   }
-
-  /* Role selection - with add/delete */
-  #role-selection {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 18px;
-    margin-top: 1rem;
-  }
-  .role-card {
-    background: white;
-    padding: 1.5rem 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
-    cursor: pointer;
-    text-align: center;
-    width: 220px;
-    position: relative;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .role-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 20px rgb(0 0 0 / 0.15);
-  }
-  .role-emoji {
-    font-size: 3rem;
-    margin-bottom: 0.6rem;
-  }
-  .role-delete {
-    position: absolute;
-    top: 8px; right: 8px;
-    background: #e53935;
-    border: none;
-    color: white;
-    font-weight: 700;
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    line-height: 18px;
-    cursor: pointer;
-    font-size: 16px;
+  #app {
     display: none;
   }
-  .role-card:hover .role-delete {
-    display: block;
-  }
-
-  #add-role-form {
-    margin-top: 1.5rem;
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgb(0 0 0 / 0.1);
-    max-width: 400px;
-  }
-  #add-role-form input[type=text] {
-    width: 70%;
-    padding: 8px;
-    margin-right: 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 1rem;
-  }
-  #add-role-form input[type=text]:focus {
-    border-color: #004aad;
-    outline: none;
-  }
-  #add-role-form button {
-    background: #004aad;
-    border: none;
-    color: white;
-    padding: 9px 16px;
-    border-radius: 8px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  #add-role-form button:hover {
-    background: #00337f;
-  }
-
-  /* Dashboard container */
-  #dashboard {
-    display: none;
-    margin-top: 1rem;
-  }
-  #dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  #dashboard-header button {
-    background: #004aad;
-    border: none;
-    color: white;
-    padding: 9px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 700;
-  }
-  #dashboard-header button:hover {
-    background: #00337f;
-  }
-  #role-progress {
-    margin-top: 10px;
-    max-width: 400px;
-  }
-  #progress-bar {
-    width: 100%;
-    height: 22px;
-    background: #ddd;
-    border-radius: 15px;
-    overflow: hidden;
-    margin-top: 6px;
-  }
-  #progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #004aad 0%, #00aaff 100%);
-    width: 0;
-    transition: width 0.6s ease;
-  }
-  #progress-text {
-    margin-top: 4px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: #004aad;
-  }
-  #progress-emoji {
-    font-size: 1.5rem;
-    margin-left: 10px;
-    vertical-align: middle;
-  }
-
-  /* Roadmap list, topic, subtopic styling */
-  .topic-list, .subtopic-list {
-    margin-top: 1.5rem;
-  }
-  .topic-card, .subtopic-card {
-    background: white;
-    padding: 14px 18px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
-    cursor: pointer;
-    transition: box-shadow 0.3s ease;
-  }
-  .topic-card:hover, .subtopic-card:hover {
-    box-shadow: 0 8px 18px rgb(0 0 0 / 0.12);
-  }
-  .topic-title, .subtopic-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  /* Topic details */
-  #topic-details {
-    display: none;
-    background: white;
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgb(0 0 0 / 0.1);
-    margin-top: 1rem;
-    max-width: 800px;
-  }
-  #topic-details textarea {
-    width: 100%;
-    height: 70px;
-    font-size: 1rem;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    resize: vertical;
-  }
-  #topic-details textarea:focus {
-    outline: none;
-    border-color: #004aad;
-  }
-  #topic-details label {
-    font-weight: 600;
-    margin-top: 10px;
-    display: block;
-    color: #004aad;
-  }
-  #topic-details input[type=url], #topic-details input[type=datetime-local], #topic-details select {
-    width: 100%;
-    padding: 7px;
-    margin-top: 4px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 1rem;
-  }
-  #topic-details input[type=url]:focus, #topic-details input[type=datetime-local]:focus, #topic-details select:focus {
-    border-color: #004aad;
-    outline: none;
-  }
-  #topic-details button {
-    margin-top: 12px;
-    background: #004aad;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 700;
-  }
-  #topic-details button:hover {
-    background: #00337f;
-  }
-  #topic-details .back-btn {
-    background: #bbb;
-    margin-right: 10px;
-  }
-  #topic-details .back-btn:hover {
-    background: #999;
-  }
-
-  /* Subtopic card detail */
-  .subtopic-status {
-    font-weight: 700;
-  }
-  .status-pending { color: #d97706; } /* amber-600 */
-  .status-inprogress { color: #2563eb; } /* blue-600 */
-  .status-finished { color: #16a34a; } /* green-600 */
-
-  /* Skill / Tools Section */
-  #skills-tools {
-    margin-top: 2rem;
-    background: white;
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
-    max-width: 700px;
-  }
-  .skill-group {
-    margin-bottom: 1rem;
-  }
-  .skill-group h4 {
-    margin-bottom: 8px;
-  }
-  .skill-list {
-    list-style: none;
-    padding-left: 0;
-  }
-  .skill-list li {
-    margin-bottom: 6px;
-    font-weight: 600;
-  }
-  
-  /* Footer */
-  footer {
-    text-align: center;
-    background: #004aad;
-    color: white;
-    padding: 12px 0;
-    font-weight: 600;
-    flex-shrink: 0;
-  }
-
-  /* Responsive */
-  @media (max-width: 600px) {
-    .role-card {
-      width: 100%;
-    }
+  #logout-btn {
+    background: #e53935; width: auto; padding: 6px 14px; margin-bottom: 12px;
   }
 </style>
 </head>
 <body>
 
 <div class="container">
+  
+  <div id="auth-section">
+    <h2 id="auth-title">Login</h2>
+    <input type="text" id="username" placeholder="Username" autocomplete="username" />
+    <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+    <button id="auth-btn">Login</button>
+    <div class="switch" id="switch-auth">Don't have an account? Sign up here</div>
+  </div>
 
-  <h1>Professional Study Tracker</h1>
-  <p style="font-weight:600;">Created by Vaishnavi Radhrishnan <span>🎉</span></p>
+  <div id="app">
+    <button id="logout-btn">Logout</button>
+    <h2>Welcome, <span id="welcome-user"></span>!</h2>
 
-  <!-- Roles Section -->
-  <section id="role-section">
-    <h2>Your Roles <span>🎯</span></h2>
+    <h3>Select Your Role</h3>
     <div id="role-selection"></div>
 
     <form id="add-role-form" aria-label="Add New Role Form">
-      <input type="text" id="new-role-input" placeholder="Enter new role title" aria-required="true" />
-      <button type="submit" aria-label="Add Role Button">Add Role</button>
+      <input type="text" id="new-role-input" placeholder="Add new role title" />
+      <button type="submit">Add Role</button>
     </form>
-  </section>
 
-  <!-- Show progress outside dashboard -->
-  <div id="role-progress"></div>
+    <div id="role-progress"></div>
 
-  <!-- Dashboard Section -->
-  <section id="dashboard">
-    <div id="dashboard-header">
-      <h2 id="role-title"></h2>
-      <button id="back-to-roles" aria-label="Back to roles selection">← Back to Roles</button>
+    <div id="dashboard" style="margin-top: 15px; display:none;">
+      <h3 id="role-title"></h3>
+      <button id="back-to-roles">&#8592; Back to Roles</button>
+      <div id="topic-list" style="margin-top:15px;"></div>
     </div>
-
-    <div id="roadmap-wrapper">
-      <h3>Main Topics <span>📚</span></h3>
-      <div id="topic-list" class="topic-list"></div>
-    </div>
-
-    <div id="skills-tools">
-      <h3>Tools and Skills <span>🛠️</span></h3>
-      <div class="skill-group">
-        <h4>Development / Infrastructure Tools</h4>
-        <ul id="dev-tools-list" class="skill-list"></ul>
-      </div>
-      <div class="skill-group">
-        <h4>Monitoring Tools</h4>
-        <ul id="monitoring-tools-list" class="skill-list"></ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- Topic Details Section -->
-  <section id="topic-details">
-    <h3 id="topic-details-title"></h3>
-    <p><strong>Description:</strong></p>
-    <textarea id="topic-desc" aria-label="Edit topic description"></textarea>
-
-    <p><strong>Progress: </strong><span id="topic-progress"></span>% <span id="topic-progress-emoji"></span></p>
-
-    <h4>Subtopics <span>🧩</span></h4>
-    <div id="subtopic-list" class="subtopic-list"></div>
-
-    <button class="back-btn" id="back-to-main">← Back to Topics</button>
-    <button id="save-topic-details">Save Changes</button>
-  </section>
+  </div>
 
 </div>
 
-<footer>
-  Professional Website &copy; 2025 - Created by Vaishnavi Radhrishnan
-</footer>
-
 <script>
-  // Data Keys
-  const ROLES_KEY = "studyTrackerRoles";
-  const SELECTED_ROLE_KEY = "studyTrackerSelectedRole";
-  const ROADMAP_KEY = "studyTrackerRoadmap";
-  
-  // Demo Emojis for progress percentages
-  const EMOJIS = {
-    100: "🏆🎉",
-    80: "🚀🔥",
-    50: "👍🙂",
-    20: "⏳🤞",
-    0: "🐢😴"
-  };
-  function getEmojiForPercent(p){
-    if(p >= 100) return EMOJIS[100];
-    if(p >= 80) return EMOJIS[80];
-    if(p >= 50) return EMOJIS[50];
-    if(p >= 20) return EMOJIS[20];
-    return EMOJIS[0];
-  }
+  // User 'database' in localStorage - username: {password, data}
+  let users = JSON.parse(localStorage.getItem("users") || "{}");
 
-  // Default roles & roadmaps sample - allows editing and adding new roles
-  let roles = JSON.parse(localStorage.getItem(ROLES_KEY)) || [
-    {
-      title: "DevOps Engineer",
-      roadmap: [
-        { id: "linux", topic: "Linux & Shell Scripting", status: "Pending",
-          description: "Master Linux basics and shell scripting for automation",
-          subtopics: [
-            {id: "linux-intro", title:"Linux Introduction", status: "Finished", notes:"Basic commands and terminal usage", link: "" },
-            {id: "shell", title:"Shell Scripting", status: "In Progress", notes:"Writing bash scripts", link: "" }
-          ]
-        },
-        { id: "git", topic: "Git & GitHub", status: "Pending",
-          description: "Version control and collaboration platforms",
-          subtopics: [
-            {id: "git-basic", title:"Git Basics", status: "Finished", notes:"Commit, branch basics", link:"https://git-scm.com/book/en/v2" },
-            {id: "github", title:"GitHub", status: "Pending", notes:"Pull requests and forks", link:"" }
-          ]
-        },
-        { id: "docker", topic:"Containerization with Docker", status: "Pending", description:"Building and running containers", subtopics: [] },
-        { id: "k8s", topic:"Kubernetes (AKS)", status:"Pending", description:"Container orchestration", subtopics: [] },
-        { id: "cicd", topic:"CI/CD with Jenkins & Azure DevOps", status:"Pending", description:"Pipeline setup and automation", subtopics: [] },
-        { id: "iac", topic:"Infrastructure as Code (Terraform, ARM Templates)", status:"Pending", description:"IaC automation", subtopics: [] },
-        { id: "monitoring", topic:"Monitoring Tools (Grafana, Prometheus, SonarQube)", status:"Pending", description:"Monitoring setup", subtopics: [] }
-      ],
-      devTools: ["Git & GitHub", "Docker", "Terraform", "Azure DevOps", "Jenkins"],
-      monitoringTools: ["Grafana", "Prometheus", "SonarQube"]
-    },
-    {
-      title: "Infrastructure Engineer",
-      roadmap: [
-        { id:"azure", topic:"Microsoft Azure Core", status:"Pending", description: "VMs, Storage, Networking", subtopics: [] },
-        { id:"aws", topic:"AWS Core Services", status:"Pending", description: "EC2, IAM, VPC, CloudWatch, S3", subtopics: [] },
-        { id:"vmware", topic:"VMware vSphere 7/8", status:"Pending", description:"Virtualization platform management", subtopics: [] },
-        { id:"networking", topic:"Networking: DNS, DHCP, VPN, Load Balancers", status:"Pending", description:"Networking essentials", subtopics: [] },
-        { id:"databases", topic:"MySQL, Oracle SQL", status:"Pending", description:"Databases basics", subtopics: [] },
-        { id:"os", topic:"Windows Server & Linux OS", status:"Pending", description:"OS management", subtopics: [] },
-        { id:"itsm", topic:"ServiceNow ITSM, SolarWinds, Commvault", status:"Pending", description:"IT management & monitoring", subtopics: [] }
-      ],
-      devTools: ["Azure Portal", "AWS Console", "VMware vSphere", "ServiceNow"],
-      monitoringTools: ["SolarWinds", "Commvault"]
-    },
-    {
-      title:"NOC Monitoring / Lead",
-      roadmap:[
-        { id:"servicenow", topic:"ServiceNow ITSM", status:"Pending", description:"Incident and change management", subtopics: [] },
-        { id:"cloudwatch", topic:"Amazon CloudWatch", status:"Pending", description:"AWS resource monitoring", subtopics: [] },
-        { id:"solarwinds", topic:"SolarWinds NPM", status:"Pending", description:"Network monitoring", subtopics: [] },
-        { id:"onboarding", topic:"Onboarding/Offboarding Nodes", status:"Pending", description:"Node lifecycle management", subtopics: [] },
-        { id:"monitoring", topic:"Server & Network Monitoring", status:"Pending", description:"Escalation and health checks", subtopics: [] },
-        { id:"alarm", topic:"Alarm Monitoring & Training", status:"Pending", description:"Incident escalation", subtopics: [] }
-      ],
-      devTools: ["ServiceNow", "Amazon CloudWatch"],
-      monitoringTools: ["SolarWinds"]
-    }
-  ];
+  let currentUser = null;
 
-  // App State
-  let selectedRoleIndex = null;
-  let selectedTopicId = null;
+  const authTitle = document.getElementById("auth-title");
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  const authBtn = document.getElementById("auth-btn");
+  const switchAuth = document.getElementById("switch-auth");
 
-  // DOM Elements
+  const authSection = document.getElementById("auth-section");
+  const appSection = document.getElementById("app");
+  const logoutBtn = document.getElementById("logout-btn");
+  const welcomeUser = document.getElementById("welcome-user");
+
   const roleSelectionEl = document.getElementById("role-selection");
   const addRoleForm = document.getElementById("add-role-form");
   const newRoleInput = document.getElementById("new-role-input");
 
   const dashboardEl = document.getElementById("dashboard");
-  const roleTitleEl = document.getElementById("role-title");
   const backToRolesBtn = document.getElementById("back-to-roles");
+  const roleTitleEl = document.getElementById("role-title");
+  const topicListEl = document.getElementById("topic-list");
   const roleProgressEl = document.getElementById("role-progress");
 
-  const topicListEl = document.getElementById("topic-list");
-  const devToolsListEl = document.getElementById("dev-tools-list");
-  const monitoringToolsListEl = document.getElementById("monitoring-tools-list");
+  let selectedRoleIndex = null;
 
-  const topicDetailsEl = document.getElementById("topic-details");
-  const topicDetailsTitleEl = document.getElementById("topic-details-title");
-  const topicDescEl = document.getElementById("topic-desc");
-  const topicProgressEl = document.getElementById("topic-progress");
-  const topicProgressEmojiEl = document.getElementById("topic-progress-emoji");
-  const subtopicListEl = document.getElementById("subtopic-list");
-  const backToMainBtn = document.getElementById("back-to-main");
-  const saveTopicDetailsBtn = document.getElementById("save-topic-details");
-
-  // Utility: Save all roles to localStorage
-  function saveRoles() {
-    localStorage.setItem(ROLES_KEY, JSON.stringify(roles));
-  }
-  // Load roles from localStorage
-  function loadRoles() {
-    const stored = localStorage.getItem(ROLES_KEY);
-    if(stored) roles = JSON.parse(stored);
-  }
-
-  // Render roles to homepage
-  function renderRoles() {
-    roleSelectionEl.innerHTML = "";
-    roles.forEach((role, i) => {
-      const card = document.createElement("div");
-      card.className = "role-card";
-      card.dataset.index = i;
-      card.tabIndex = 0;
-      card.innerHTML = `
-        <div class="role-emoji">${getRoleEmoji(role.title)}</div>
-        <div>${role.title}</div>
-        <button title="Delete role" aria-label="Delete ${role.title}" class="role-delete">&times;</button>
-      `;
-      roleSelectionEl.appendChild(card);
-
-      card.addEventListener("click", e => {
-        // Prevent click if delete pressed
-        if(e.target.classList.contains("role-delete")) return;
-        selectRole(i);
-      });
-
-      card.querySelector(".role-delete").addEventListener("click", e => {
-        e.stopPropagation();
-        if(confirm(`Delete role: "${role.title}"? This will remove all data for this role.`)) {
-          roles.splice(i,1);
-          saveRoles();
-          renderRoles();
-          clearDashboard();
-        }
-      });
-    });
-  }
-
-  // Return role emoji for display
-  function getRoleEmoji(title) {
-    const map = {
-      "DevOps Engineer": "🚀",
-      "Infrastructure Engineer": "💻",
-      "NOC Monitoring / Lead": "🖥️"
-    };
-    return map[title] || "🎯";
-  }
-
-  // Select a role to show dashboard
-  function selectRole(index) {
-    selectedRoleIndex = index;
-    const role = roles[index];
-    roleTitleEl.textContent = role.title + " Roadmap";
-    dashboardEl.style.display = "block";
-    renderProgress(role);
-    renderRoleRoadmap(role);
-    renderSkills(role);
-    roleProgressEl.innerHTML = "";
-    renderRoles();
-    scrollToTop();
-  }
-
-  // Scroll to top helper
-  function scrollToTop() {
-    window.scrollTo({top:0, behavior:"smooth"});
-  }
-
-  // Render overall progress for role (outside dashboard)
-  function renderProgress(role) {
-    const totalTopics = role.roadmap.length;
-    if(totalTopics === 0) {
-      roleProgressEl.innerHTML = "";
-      return;
-    }
-    let finishedCount = 0;
-    role.roadmap.forEach(t => { if(t.status === "Finished") finishedCount++; });
-    const percent = Math.round((finishedCount / totalTopics) * 100);
-    roleProgressEl.innerHTML = `
-      <h3>${role.title} Overall Progress</h3>
-      <div id="progress-bar" aria-label="Overall progress bar for ${role.title}">
-        <div id="progress-fill" style="width:${percent}%; background: linear-gradient(90deg, #004aad 0%, #00aaff 100%); height: 25px; border-radius: 15px;"></div>
-      </div>
-      <p id="progress-text" style="font-weight: bold; font-size: 1.25rem; color: #004aad;">${percent}% completed <span>${getEmojiForPercent(percent)}</span></p>
-    `;
-  }
-
-  // Render roadmap main topics
-  function renderRoleRoadmap(role) {
-    topicListEl.innerHTML = "";
-    role.roadmap.forEach((topic, idx) => {
-      const div = document.createElement("div");
-      div.className = "topic-card";
-      div.tabIndex = 0;
-      div.dataset.idx = idx;
-      div.innerHTML = `
-        <div class="topic-title">
-          <span>${topic.topic}</span>
-          <span>${getStatusEmoji(topic.status)}</span>
-        </div>
-        <p style="margin-top:6px; color:#555;">${topic.description}</p>
-      `;
-      topicListEl.appendChild(div);
-
-      // Click on topic to show details
-      div.addEventListener("click", () => {
-        showTopicDetails(idx);
-      });
-      div.addEventListener("keypress", e => {
-        if(e.key === "Enter") showTopicDetails(idx);
-      });
-    });
-  }
-
-  // Render dev and monitoring tools separately
-  function renderSkills(role) {
-    devToolsListEl.innerHTML = "";
-    monitoringToolsListEl.innerHTML = "";
-    if(role.devTools && role.devTools.length) {
-      role.devTools.forEach(tool => {
-        const li = document.createElement("li");
-        li.textContent = tool;
-        devToolsListEl.appendChild(li);
-      });
-    }
-    if(role.monitoringTools && role.monitoringTools.length) {
-      role.monitoringTools.forEach(tool => {
-        const li = document.createElement("li");
-        li.textContent = tool;
-        monitoringToolsListEl.appendChild(li);
-      });
-    }
-  }
-
-  // Status emoji helper
-  function getStatusEmoji(status) {
-    switch(status) {
-      case "Pending": return "⏳";
-      case "In Progress": return "🔄";
-      case "Finished": return "✅";
-      default: return "";
-    }
-  }
-
-  // Show topic details page
-  function showTopicDetails(topicIndex) {
-    selectedTopicId = topicIndex;
-    dashboardEl.style.display = "none";
-    topicDetailsEl.style.display = "block";
-
-    const role = roles[selectedRoleIndex];
-    const topic = role.roadmap[topicIndex];
-
-    topicDetailsTitleEl.textContent = topic.topic;
-    topicDescEl.value = topic.description;
-
-    // Show progress of subtopics (percentage finished)
-    const totalSub = topic.subtopics.length;
-    let finishedSub = 0;
-    topic.subtopics.forEach(st => { if(st.status === "Finished") finishedSub++; });
-    const percent = totalSub === 0 ? 0 : Math.round((finishedSub / totalSub) * 100);
-    topicProgressEl.textContent = percent;
-    topicProgressEmojiEl.textContent = getEmojiForPercent(percent);
-
-    renderSubtopics(topic.subtopics || []);
-    
-    scrollToTop();
-  }
-
-  // Render subtopics for selected topic
-  function renderSubtopics(subtopics) {
-    subtopicListEl.innerHTML = "";
-    if(!subtopics.length) {
-      subtopicListEl.innerHTML = "<p>No subtopics added yet.</p>";
-      return;
-    }
-    subtopics.forEach((sub, i) => {
-      const div = document.createElement("div");
-      div.className = "subtopic-card";
-      div.tabIndex = 0;
-      div.dataset.subidx = i;
-      div.innerHTML = `
-        <div class="subtopic-title">${sub.title}
-          <span class="subtopic-status status-${sub.status.toLowerCase().replace(" ","")}">${getStatusEmoji(sub.status)}</span>
-        </div>
-        <p style="margin-top:5px; color:#555">${sub.notes || "(No notes)"}</p>
-        <p><a href="${sub.link || '#'}" target="_blank" rel="noreferrer noopener">${sub.link || "(No link)"}</a></p>
-      `;
-      subtopicListEl.appendChild(div);
-
-      div.addEventListener("click", () => {
-        showSubtopicEditor(i);
-      });
-      div.addEventListener("keypress", e => {
-        if(e.key === "Enter") showSubtopicEditor(i);
-      });
-    });
-  }
-
-  // Show subtopic editor modal (simple overlay)
-  function showSubtopicEditor(subIdx) {
-    const role = roles[selectedRoleIndex];
-    const topic = role.roadmap[selectedTopicId];
-    const sub = topic.subtopics[subIdx];
-
-    let modal = document.createElement("div");
-    modal.setAttribute("role","dialog");
-    modal.style.position = "fixed";
-    modal.style.top = "0"; modal.style.left = "0";
-    modal.style.width = "100vw"; modal.style.height = "100vh";
-    modal.style.background = "rgba(0,0,0,0.6)";
-    modal.style.display = "flex";
-    modal.style.justifyContent = "center";
-    modal.style.alignItems = "center";
-    modal.style.zIndex = 9999;
-
-    modal.innerHTML = `
-      <div style="background:#fff; border-radius:12px; padding:20px; max-width: 480px; width: 90%;">
-        <h3>Edit Subtopic: ${sub.title}</h3>
-        <label>Status:
-          <select id="edit-sub-status" style="width:100%; margin-top:5px; margin-bottom:15px;">
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Finished">Finished</option>
-          </select>
-        </label>
-        <label>Notes:
-          <textarea id="edit-sub-notes" rows="4" style="width:100%; margin-top:5px; margin-bottom:15px;"></textarea>
-        </label>
-        <label>Learning Link:
-          <input type="url" id="edit-sub-link" style="width:100%; margin-bottom:15px;" placeholder="https://example.com"/>
-        </label>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-          <button id="subtopic-save-btn" style="background:#004aad; color:#fff; padding:8px 14px; border:none; border-radius:6px; cursor:pointer;">Save</button>
-          <button id="subtopic-cancel-btn" style="background:#bbb; color:#333; padding:8px 14px; border:none; border-radius:6px; cursor:pointer;">Cancel</button>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    // Set current values
-    document.getElementById("edit-sub-status").value = sub.status;
-    document.getElementById("edit-sub-notes").value = sub.notes || "";
-    document.getElementById("edit-sub-link").value = sub.link || "";
-
-    function closeModal() {
-      modal.remove();
-    }
-
-    document.getElementById("subtopic-save-btn").onclick = () => {
-      sub.status = document.getElementById("edit-sub-status").value;
-      sub.notes = document.getElementById("edit-sub-notes").value.trim();
-      sub.link = document.getElementById("edit-sub-link").value.trim();
-      saveRoles();
-      renderSubtopics(topic.subtopics);
-      closeModal();
-    };
-    document.getElementById("subtopic-cancel-btn").onclick = closeModal;
-  }
-
-  // Back from topic details to dashboard
-  backToMainBtn.onclick = () => {
-    topicDetailsEl.style.display = "none";
-    dashboardEl.style.display = "block";
-    scrollToTop();
+  // Toggle between login and signup mode
+  let isLogin = true;
+  switchAuth.onclick = () => {
+    isLogin = !isLogin;
+    authTitle.textContent = isLogin ? "Login" : "Sign Up";
+    authBtn.textContent = isLogin ? "Login" : "Sign Up";
+    switchAuth.textContent = isLogin ? "Don't have an account? Sign up here" : "Already have an account? Login here";
   };
 
-  // Save changes for topic description
-  saveTopicDetailsBtn.onclick = () => {
-    const role = roles[selectedRoleIndex];
-    const topic = role.roadmap[selectedTopicId];
-    topic.description = topicDescEl.value.trim();
-    saveRoles();
-    renderRoleRoadmap(role);
-    alert("Topic description saved!");
+  // Hash simple (for demo only)
+  function simpleHash(str) {
+    let hash = 0;
+    for(let i=0; i<str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return hash.toString();
+  }
+
+  // Auth button click handler
+  authBtn.onclick = () => {
+    const user = usernameInput.value.trim();
+    const pass = passwordInput.value.trim();
+    if(!user || !pass) {
+      alert("Please enter username and password");
+      return;
+    }
+    if(isLogin) {
+      // Login
+      if(users[user] && users[user].password === simpleHash(pass)) {
+        currentUser = user;
+        startupForUser(user);
+      } else {
+        alert("Invalid username or password");
+      }
+    } else {
+      // Signup
+      if(users[user]) {
+        alert("Username already exists");
+        return;
+      }
+      users[user] = { password: simpleHash(pass), data: {roles:[]} };
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("Signup successful! Please login.");
+      isLogin = true;
+      authTitle.textContent = "Login";
+      authBtn.textContent = "Login";
+      switchAuth.textContent = "Don't have an account? Sign up here";
+      usernameInput.value = "";
+      passwordInput.value = "";
+    }
   };
 
-  // Back to roles list from dashboard
-  backToRolesBtn.onclick = () => {
+  // Start app for logged in user
+  function startupForUser(user) {
+    authSection.style.display = "none";
+    appSection.style.display = "block";
+    logoutBtn.style.display = "inline-block";
+    welcomeUser.textContent = user;
+    loadUserRoles();
+  }
+
+  // Load roles from user data
+  function loadUserRoles() {
+    const data = users[currentUser].data;
+    if(!data.roles) data.roles = [];
+    renderRoles(data.roles);
     dashboardEl.style.display = "none";
-    roleProgressEl.innerHTML = "";
     selectedRoleIndex = null;
-    selectedTopicId = null;
-    renderRoles();
-    scrollToTop();
-  };
+    roleProgressEl.textContent = "";
+  }
 
-  // Add new role handler
-  addRoleForm.addEventListener("submit", (e)=>{
+  // Render roles for user
+  function renderRoles(roles) {
+    roleSelectionEl.innerHTML = "";
+    if(roles.length === 0) {
+      roleSelectionEl.innerHTML = "<p>No roles added yet.</p>";
+      return;
+    }
+    roles.forEach((role, idx) => {
+      const div = document.createElement("div");
+      div.textContent = role.title;
+      div.style.padding = "10px 15px";
+      div.style.border = "1px solid #ddd";
+      div.style.margin = "8px 0";
+      div.style.borderRadius = "6px";
+      div.style.cursor = "pointer";
+      div.style.background = "#f0f8ff";
+      div.addEventListener("click", () => {
+        showDashboard(idx);
+      });
+      roleSelectionEl.appendChild(div);
+    });
+  }
+
+  // Show dashboard for selected role
+  function showDashboard(idx) {
+    selectedRoleIndex = idx;
+    const role = users[currentUser].data.roles[idx];
+    dashboardEl.style.display = "block";
+    roleTitleEl.textContent = role.title;
+    renderProgress(role);
+    renderTopics(role);
+    roleProgressEl.textContent = "";
+    roleSelectionEl.style.display = "none";
+    addRoleForm.style.display = "none";
+  }
+
+  // Render overall progress % for role
+  function renderProgress(role) {
+    const totalTopics = role.roadmap ? role.roadmap.length : 0;
+    if (totalTopics === 0) {
+      roleProgressEl.textContent = "";
+      return;
+    }
+    const finishedCount = role.roadmap.filter(t => t.status === "Finished").length;
+    const percent = Math.round((finishedCount / totalTopics) * 100);
+    roleProgressEl.innerHTML = `<strong>Progress:</strong> ${percent}% completed`;
+  }
+
+  // Render topics list for selected role
+  function renderTopics(role) {
+    topicListEl.innerHTML = "";
+    if (!role.roadmap || role.roadmap.length === 0) {
+      topicListEl.innerHTML = "<p>No topics found for this role yet.</p>";
+      return;
+    }
+    role.roadmap.forEach((topic, i) => {
+      const div = document.createElement("div");
+      div.textContent = topic.topic + " - " + topic.status;
+      div.style.padding = "8px";
+      div.style.borderBottom = "1px solid #eee";
+      div.style.cursor = "pointer";
+      div.addEventListener("click", () => {
+        alert(`Show detailed topic tracking view here for: ${topic.topic}\nYou can extend this to edit Status, Description etc.`);
+      });
+      topicListEl.appendChild(div);
+    });
+  }
+
+  // Add Role form submission
+  addRoleForm.addEventListener("submit", e => {
     e.preventDefault();
-    let title = newRoleInput.value.trim();
-    if(!title) {
+    const newRole = newRoleInput.value.trim();
+    if(!newRole) {
       alert("Please enter a role title");
       return;
     }
-    // Prevent duplicate titles
-    if(roles.some(r=>r.title.toLowerCase()===title.toLowerCase())) {
-      alert("Role title already exists.");
+    const data = users[currentUser].data;
+    data.roles = data.roles || [];
+    // Prevent duplicate role
+    if(data.roles.some(r => r.title.toLowerCase() === newRole.toLowerCase())) {
+      alert("This role already exists.");
       return;
     }
-
-    roles.push({
-      title: title,
-      roadmap: [],
-      devTools: [],
-      monitoringTools: []
-    });
-    saveRoles();
-    renderRoles();
+    data.roles.push({ title: newRole, roadmap: [] });
+    users[currentUser].data = data;
+    localStorage.setItem("users", JSON.stringify(users));
     newRoleInput.value = "";
+    renderRoles(data.roles);
   });
 
-  // On load
-  window.onload = () => {
-    loadRoles();
-    renderRoles();
-  };
-</script>
+  // Logout button
+  logoutBtn.addEventListener("click", () => {
+    currentUser = null;
+    authSection.style.display = "block";
+    appSection.style.display = "none";
+    usernameInput.value = "";
+    passwordInput.value = "";
+    roleSelectionEl.style.display = "block";
+    addRoleForm.style.display = "block";
+  });
 
+  // Check if already logged in (sessionStorage)
+  window.onload = () => {
+    let savedUser = sessionStorage.getItem("loggedInUser");
+    if(savedUser && users[savedUser]) {
+      currentUser = savedUser;
+      startupForUser(savedUser);
+    }
+  };
+
+  // Save current user to sessionStorage on login
+  function saveCurrentUserSession(username) {
+    sessionStorage.setItem("loggedInUser", username);
+  }
+
+  // After login
+  authBtn.onclick = () => {
+    const user = usernameInput.value.trim();
+    const pass = passwordInput.value.trim();
+    if(!user || !pass) {
+      alert("Please enter username and password");
+      return;
+    }
+    if(isLogin) {
+      if(users[user] && users[user].password === simpleHash(pass)) {
+        currentUser = user;
+        saveCurrentUserSession(user);
+        startupForUser(user);
+      } else {
+        alert("Invalid username or password");
+      }
+    } else {
+      if(users[user]) {
+        alert("Username already exists");
+        return;
+      }
+      users[user] = { password: simpleHash(pass), data: {roles:[]} };
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("Signup successful! Please login.");
+      isLogin = true;
+      authTitle.textContent = "Login";
+      authBtn.textContent = "Login";
+      switchAuth.textContent = "Don't have an account? Sign up here";
+      usernameInput.value = "";
+      passwordInput.value = "";
+    }
+  };
+
+  // Hash function for simplicity
+  function simpleHash(str) {
+    let hash = 0;
+    for(let i=0;i<str.length;i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return hash.toString();
+  }
+</script>
 
 </body>
 </html>
